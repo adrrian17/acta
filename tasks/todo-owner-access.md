@@ -127,7 +127,7 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, `pnp
 
 - [x] The Owner signs in with one click and lands on `/dashboard`
 - [x] Another GitHub account lands on `/login?error=account_rejected`, sees the message, and the `user`/`account`/`session` counts are unchanged, including on an empty database
-- [ ] Review with the human before Task 5
+- [x] Review with the human before Task 5
 
 ## Task 5: Owner check in `protectedProcedure`, and redirect to `/login` on `UNAUTHORIZED`
 
@@ -137,16 +137,16 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, `pnp
 
 **Acceptance criteria:**
 
-- [ ] `Context` gains `ownerGithubId: string`, and `apps/server/src/context.ts` sets it from `ENV.OWNER_GITHUB_ID`.
-- [ ] `protectedProcedure` throws `TRPCError({ code: "UNAUTHORIZED" })` with no session, and also when the session's user has no GitHub `account` whose `accountId` equals `ctx.ownerGithubId`. `healthCheck` stays on `publicProcedure`.
-- [ ] `QueryCache.onError` in `apps/web/src/utils/trpc.ts` sends the browser to `/login` for `UNAUTHORIZED` and keeps the toast for other errors.
+- [x] `Context` gains `ownerGithubId: string`, and `apps/server/src/context.ts` sets it from `ENV.OWNER_GITHUB_ID`.
+- [x] `protectedProcedure` throws `TRPCError({ code: "UNAUTHORIZED" })` with no session, and also when the session's user has no GitHub `account` whose `accountId` equals `ctx.ownerGithubId`. `healthCheck` stays on `publicProcedure`.
+- [x] `QueryCache.onError` in `apps/web/src/utils/trpc.ts` sends the browser to `/login` for `UNAUTHORIZED` and keeps the toast for other errors.
 
 **Verification:**
 
-- [ ] `pnpm check` and `pnpm test` pass
-- [ ] Manual AC 4: `curl -i 'http://localhost:3000/trpc/privateData'` with no cookie returns 401 with code `UNAUTHORIZED`.
-- [ ] Manual AC 7: `curl -i 'http://localhost:3000/trpc/healthCheck'` returns 200 with `"OK"`.
-- [ ] Manual AC 5: sign in as the Owner, and `/dashboard` loads `privateData`. Change `OWNER_GITHUB_ID` in the root `.env` to another valid ID and restart `pnpm dev`. Calling `privateData` with the same cookie returns `UNAUTHORIZED`, and the web app goes to `/login`. Restore the ID afterwards.
+- [x] `pnpm check` and `pnpm test` pass
+- [x] Manual AC 4: `curl -i 'http://localhost:3000/trpc/privateData'` with no cookie returns 401 with code `UNAUTHORIZED`.
+- [x] Manual AC 7: `curl -i 'http://localhost:3000/trpc/healthCheck'` returns 200 with `"OK"`.
+- [x] Manual AC 5: sign in as the Owner, and `/dashboard` loads `privateData`. Change `OWNER_GITHUB_ID` in the root `.env` to another valid ID and restart `pnpm dev`. Calling `privateData` with the same cookie returns `UNAUTHORIZED`, and the web app goes to `/login`. Restore the ID afterwards.
 
 **Dependencies:** Task 1, Task 2. The manual AC 5 check needs Task 4.
 
@@ -161,7 +161,7 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, `pnp
 
 ## Checkpoint: Complete
 
-- [ ] All seven acceptance criteria pass through their unit test or manual check
-- [ ] `pnpm check` and `pnpm test` pass
-- [ ] `rg "emailAndPassword|signIn.email|signUp.email" apps packages` returns nothing
-- [ ] Ready for review
+- [x] All seven acceptance criteria pass through their unit test or manual check
+- [x] `pnpm check` and `pnpm test` pass
+- [x] `rg "emailAndPassword|signIn.email|signUp.email" apps packages` returns nothing
+- [x] Ready for review
