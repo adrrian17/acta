@@ -25,7 +25,7 @@ Never edit these by hand. Change the source and regenerate.
 | File | Source | Regenerate | Committed |
 | --- | --- | --- | --- |
 | `apps/web/src/routeTree.gen.ts` | `apps/web/src/routes/**` | `pnpm dev:web` or build | No |
-| `{apps/web,apps/server,packages/db}/src/env.ts` | That package's `.env.schema` | `pnpm env:generate` | No |
+| `{apps/web,apps/server,packages/db}/src/env.ts` | The root `.env.schema`, filtered by the `pick` list in that package's `.env.schema` | `pnpm env:generate` | No |
 | `packages/db/src/migrations/**` | `packages/db/src/schema/**` | `pnpm db:generate` | Yes |
 
 `apps/server/cloudflare-env.d.ts` is hand-written but derives its types from `packages/infra/alchemy.run.ts`; add bindings there, not in the `.d.ts`.

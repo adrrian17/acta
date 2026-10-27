@@ -56,7 +56,9 @@ Deploy:         pnpm deploy
 Files this module touches:
 
 ```
-apps/server/.env.schema                 → add GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, OWNER_GITHUB_ID
+.env.schema                             → declare GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, OWNER_GITHUB_ID
+                                          (the root schema; every package picks its items from it)
+apps/server/.env.schema                 → add the three to the @import pick list
 packages/infra/.env.schema              → add the three to the @import pick list
 packages/infra/alchemy.run.ts           → pass the three to the server Worker env
 packages/auth/src/index.ts              → AuthConfig gains the three; remove emailAndPassword;

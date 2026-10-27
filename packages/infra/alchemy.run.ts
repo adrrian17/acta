@@ -18,6 +18,9 @@ export const server = Worker("server", {
     CORS_ORIGIN: Config.String("CORS_ORIGIN"),
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Worker.URL,
+    GITHUB_CLIENT_ID: Config.String("GITHUB_CLIENT_ID"),
+    GITHUB_CLIENT_SECRET: Config.Redacted("GITHUB_CLIENT_SECRET"),
+    OWNER_GITHUB_ID: Config.String("OWNER_GITHUB_ID"),
   },
   dev: {
     port: 3000,
