@@ -4,7 +4,9 @@ import { initTRPC, TRPCError } from "@trpc/server";
 
 import type { Context } from "./context";
 
-export const t = initTRPC.context<Context>().create();
+// tRPC infers dev mode from process.env.NODE_ENV, which the Worker never receives,
+// so it would send server stack traces to every client.
+export const t = initTRPC.context<Context>().create({ isDev: false });
 
 export const { router } = t;
 
