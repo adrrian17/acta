@@ -22,7 +22,8 @@
     "destroy": "vp run --filter @acta/infra destroy",
     "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
     "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
-    "fix": "vp check --fix"
+    "fix": "vp check --fix",
+    "test": "vp test"
   },
   "dependencies": {
     "zod": "catalog:"
