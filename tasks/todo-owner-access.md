@@ -73,16 +73,16 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, `pnp
 
 **Acceptance criteria:**
 
-- [ ] `owner.ts` exports `assertOwnerProfile(profile, ownerGithubId, fallbackErrorURL)`. For the Owner's profile it returns normally. For any other profile it throws an `APIError` with `statusCode` 302 and a `Location` ending in `?error=account_rejected`. It never touches the adapter.
-- [ ] `AuthConfig` gains `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` and `OWNER_GITHUB_ID`. `createAuth` sets `socialProviders.github` with `mapProfileToUser` calling the guard, and `emailAndPassword` is gone.
-- [ ] `POST /api/auth/sign-up/email` and `POST /api/auth/sign-in/email` return 400 with `EMAIL_PASSWORD_SIGN_UP_DISABLED` and `EMAIL_PASSWORD_DISABLED`.
+- [x] `owner.ts` exports `assertOwnerProfile(profile, ownerGithubId, fallbackErrorURL)`. For the Owner's profile it returns normally. For any other profile it throws an `APIError` with `statusCode` 302 and a `Location` ending in `?error=account_rejected`. It never touches the adapter.
+- [x] `AuthConfig` gains `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` and `OWNER_GITHUB_ID`. `createAuth` sets `socialProviders.github` with `mapProfileToUser` calling the guard, and `emailAndPassword` is gone.
+- [x] `POST /api/auth/sign-up/email` and `POST /api/auth/sign-in/email` return 400 with `EMAIL_PASSWORD_SIGN_UP_DISABLED` and `EMAIL_PASSWORD_DISABLED`.
 
 **Verification:**
 
-- [ ] `pnpm test`: the guard tests run inside `runWithRequestState(new WeakMap(), ...)` from `@better-auth/core/context`. They cover rejection (status, `Location`, error code) and acceptance of the Owner's numeric `id`.
-- [ ] `pnpm check` passes
-- [ ] Manual (`pnpm dev`): `curl -i -X POST http://localhost:3000/api/auth/sign-up/email -H 'content-type: application/json' -d '{"email":"a@b.c","password":"x","name":"x"}'` returns 400 `EMAIL_PASSWORD_SIGN_UP_DISABLED`, and the same request to `/sign-in/email` returns 400 `EMAIL_PASSWORD_DISABLED`.
-- [ ] Manual: `POST /api/auth/sign-in/social` with `{"provider":"github","callbackURL":"<web>/dashboard","errorCallbackURL":"<web>/login"}` and an `origin: <web>` header returns a `github.com/login/oauth/authorize` URL carrying the dev `client_id`.
+- [x] `pnpm test`: the guard tests run inside `runWithRequestState(new WeakMap(), ...)` from `@better-auth/core/context`. They cover rejection (status, `Location`, error code) and acceptance of the Owner's numeric `id`.
+- [x] `pnpm check` passes
+- [x] Manual (`pnpm dev`): `curl -i -X POST http://localhost:3000/api/auth/sign-up/email -H 'content-type: application/json' -d '{"email":"a@b.c","password":"x","name":"x"}'` returns 400 `EMAIL_PASSWORD_SIGN_UP_DISABLED`, and the same request to `/sign-in/email` returns 400 `EMAIL_PASSWORD_DISABLED`.
+- [x] Manual: `POST /api/auth/sign-in/social` with `{"provider":"github","callbackURL":"<web>/dashboard","errorCallbackURL":"<web>/login"}` and an `origin: <web>` header returns a `github.com/login/oauth/authorize` URL carrying the dev `client_id`.
 
 **Dependencies:** Task 1, Task 2
 
@@ -102,16 +102,16 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, `pnp
 
 **Acceptance criteria:**
 
-- [ ] `/login` shows `Sign in to acta` and a `Continue with GitHub` button (`@acta/ui` `Button`). `validateSearch` accepts an optional `error` string. `account_rejected` shows `This GitHub account can't access this acta instance.`, and any other value shows `Sign-in didn't complete. Try again.`
-- [ ] `sign-in-form.tsx` and `sign-up-form.tsx` are deleted, and `rg "emailAndPassword|signIn.email|signUp.email" apps packages` returns nothing.
-- [ ] Signing in with the Owner's GitHub account lands on `/dashboard`. Signing in with any other GitHub account lands on `/login?error=account_rejected` and shows the rejection message.
+- [x] `/login` shows `Sign in to acta` and a `Continue with GitHub` button (`@acta/ui` `Button`). `validateSearch` accepts an optional `error` string. `account_rejected` shows `This GitHub account can't access this acta instance.`, and any other value shows `Sign-in didn't complete. Try again.`
+- [x] `sign-in-form.tsx` and `sign-up-form.tsx` are deleted, and `rg "emailAndPassword|signIn.email|signUp.email" apps packages` returns nothing.
+- [x] Signing in with the Owner's GitHub account lands on `/dashboard`. Signing in with any other GitHub account lands on `/login?error=account_rejected` and shows the rejection message.
 
 **Verification:**
 
-- [ ] `pnpm check` passes (this also regenerates `routeTree.gen.ts` through the web build or dev)
-- [ ] Manual AC 1: on an empty local D1, sign in as the Owner. One `user` and one `account` row (`provider_id = 'github'`, `account_id = OWNER_GITHUB_ID`) and a `session` exist. Sign out, sign in again: still one `user` and one `account`.
-- [ ] Manual AC 2: count `user`, `account` and `session` rows, sign in with the second GitHub account, and count again. The counts are identical and the browser is on `/login?error=account_rejected`. Repeat on a fresh local D1 with zero `user` rows.
-- [ ] Manual: cancel at GitHub's consent screen. `/login` shows the generic message.
+- [x] `pnpm check` passes (this also regenerates `routeTree.gen.ts` through the web build or dev)
+- [x] Manual AC 1: on an empty local D1, sign in as the Owner. One `user` and one `account` row (`provider_id = 'github'`, `account_id = OWNER_GITHUB_ID`) and a `session` exist. Sign out, sign in again: still one `user` and one `account`.
+- [x] Manual AC 2: count `user`, `account` and `session` rows, sign in with the second GitHub account, and count again. The counts are identical and the browser is on `/login?error=account_rejected`. Repeat on a fresh local D1 with zero `user` rows.
+- [x] Manual: cancel at GitHub's consent screen. `/login` shows the generic message.
 
 **Dependencies:** Task 3
 
@@ -125,8 +125,8 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, `pnp
 
 ## Checkpoint: Sign-in
 
-- [ ] The Owner signs in with one click and lands on `/dashboard`
-- [ ] Another GitHub account lands on `/login?error=account_rejected`, sees the message, and the `user`/`account`/`session` counts are unchanged, including on an empty database
+- [x] The Owner signs in with one click and lands on `/dashboard`
+- [x] Another GitHub account lands on `/login?error=account_rejected`, sees the message, and the `user`/`account`/`session` counts are unchanged, including on an empty database
 - [ ] Review with the human before Task 5
 
 ## Task 5: Owner check in `protectedProcedure`, and redirect to `/login` on `UNAUTHORIZED`
