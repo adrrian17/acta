@@ -10,13 +10,13 @@ Before calling a task done, run the checks for every kind of change you made:
 
 | Change | Run |
 | --- | --- |
-| Any `.ts`/`.tsx` | `pnpm check` (lint + format + typecheck) |
+| Any `.ts`/`.tsx` | `pnpm check` (lint + format + typecheck) and `pnpm test` |
 | Drizzle schema | `pnpm db:generate`, commit the new migration, then `pnpm check` |
 | An `.env.schema` file | `pnpm env:generate`, then `pnpm check` |
 | `packages/ui/src/components/` | Use `shadcn add`; lint skips this folder, so `pnpm check` only covers types |
 | Docs only | `pnpm fix` (formats Markdown); no typecheck needed |
 
-There is no test runner yet.
+`pnpm test` runs the test suite (`vp test`, Vitest bundled in Vite+). Test files sit next to their source as `*.test.ts` and import from `vite-plus/test`.
 
 ## Generated files
 
