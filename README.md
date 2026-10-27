@@ -75,7 +75,7 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 
 ## Environment Configuration
 
-Each app owns its environment schema in `.env.schema`. Varlock generates `src/env.ts` during installation; run `pnpm run env:generate` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
+Every variable is declared once in the root `.env.schema`, and its values live in the root `.env`. Each package's `.env.schema` imports the root with a `pick` list of only the items it needs, so the web app never sees server secrets. Varlock generates `src/env.ts` during installation; run `pnpm run env:generate` after changing a schema. Commit schemas, and keep secrets in the ignored root `.env` or your deployment platform.
 
 Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
 
@@ -105,7 +105,7 @@ cd packages/infra && pnpm exec alchemy deploy --stage production
 
 ### Production origins
 
-- Required after the first deploy: set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.
+- Required after the first deploy: set `CORS_ORIGIN` in the root `.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.
 
 ## Git Hooks and Formatting
 

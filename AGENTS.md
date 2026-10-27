@@ -1,126 +1,44 @@
-# Ultracite Code Standards
+# acta
 
-This project uses **Ultracite**, a zero-config preset that enforces strict code quality standards through automated formatting and linting.
+acta is a single-Owner personal knowledge system (notes first; search, relations, tasks and agent memory later). It is a pnpm monorepo: TanStack Router web app, Hono + tRPC server on Cloudflare Workers, Drizzle on D1, Better Auth.
 
-## Quick Reference
+## Commands
 
-- **Fix issues**: `pnpm exec vp check --fix`
-- **Check for issues**: `pnpm exec vp check`
+Use **pnpm** (not npm). Vite+ (`vp`) runs every task; there are no separate ESLint/Prettier configs. `vp check` alone does **not** typecheck.
 
-Vite+ runs Oxlint + Oxfmt with the Ultracite presets configured in `vite.config.ts`. Most issues are automatically fixable. A pre-commit hook runs `vp staged` on staged files.
+Before calling a task done, run the checks for every kind of change you made:
 
----
+| Change | Run |
+| --- | --- |
+| Any `.ts`/`.tsx` | `pnpm check` (lint + format + typecheck) and `pnpm test` |
+| Drizzle schema | `pnpm db:generate`, commit the new migration, then `pnpm check` |
+| An `.env.schema` file | `pnpm env:generate`, then `pnpm check` |
+| `packages/ui/src/components/` | Use `shadcn add`; lint skips this folder, so `pnpm check` only covers types |
+| Docs only | `pnpm fix` (formats Markdown); no typecheck needed |
 
-## Core Principles
+`pnpm test` runs the test suite (`vp test`, Vitest bundled in Vite+). Test files sit next to their source as `*.test.ts` and import from `vite-plus/test`.
 
-Write code that is **accessible, performant, type-safe, and maintainable**. Focus on clarity and explicit intent over brevity.
+## Generated files
 
-### Type Safety & Explicitness
+Never edit these by hand. Change the source and regenerate.
 
-- Use explicit types for function parameters and return values when they enhance clarity
-- Prefer `unknown` over `any` when the type is genuinely unknown
-- Use const assertions (`as const`) for immutable values and literal types
-- Leverage TypeScript's type narrowing instead of type assertions
-- Use meaningful variable names instead of magic numbers - extract constants with descriptive names
+| File | Source | Regenerate | Committed |
+| --- | --- | --- | --- |
+| `apps/web/src/routeTree.gen.ts` | `apps/web/src/routes/**` | `pnpm dev:web` or build | No |
+| `{apps/web,apps/server,packages/db}/src/env.ts` | The root `.env.schema`, filtered by the `pick` list in that package's `.env.schema` | `pnpm env:generate` | No |
+| `packages/db/src/migrations/**` | `packages/db/src/schema/**` | `pnpm db:generate` | Yes |
 
-### Modern JavaScript/TypeScript
+`apps/server/cloudflare-env.d.ts` is hand-written but derives its types from `packages/infra/alchemy.run.ts`; add bindings there, not in the `.d.ts`.
 
-- Use arrow functions for callbacks and short functions
-- Prefer `for...of` loops over `.forEach()` and indexed `for` loops
-- Use optional chaining (`?.`) and nullish coalescing (`??`) for safer property access
-- Prefer template literals over string concatenation
-- Use destructuring for object and array assignments
-- Use `const` by default, `let` only when reassignment is needed, never `var`
+## Context
 
-### Async & Promises
+- Product scope: [docs/brief.md](docs/brief.md)
+- Domain vocabulary: [GLOSSARY.md](GLOSSARY.md). Use these terms in code, UI copy and docs; avoid the words each entry lists under _Avoid_. The **Owner** is a domain concept and is not Better Auth's `user` table. Never rename existing DB tables, columns or library identifiers to match the glossary.
+- Decisions: [docs/adr/](docs/adr/). Read them before proposing a new auth, identity, storage or data primitive. If a change contradicts an ADR, stop and ask.
 
-- Always `await` promises in async functions - don't forget to use the return value
-- Use `async/await` syntax instead of promise chains for better readability
-- Handle errors appropriately in async code with try-catch blocks
-- Don't use async functions as Promise executors
+## Read when relevant
 
-### React & JSX
-
-- Use function components over class components
-- Call hooks at the top level only, never conditionally
-- Specify all dependencies in hook dependency arrays correctly
-- Use the `key` prop for elements in iterables (prefer unique IDs over array indices)
-- Nest children between opening and closing tags instead of passing as props
-- Don't define components inside other components
-- Use semantic HTML and ARIA attributes for accessibility:
-  - Provide meaningful alt text for images
-  - Use proper heading hierarchy
-  - Add labels for form inputs
-  - Include keyboard event handlers alongside mouse events
-  - Use semantic elements (`<button>`, `<nav>`, etc.) instead of divs with roles
-
-### Error Handling & Debugging
-
-- Remove `console.log`, `debugger`, and `alert` statements from production code
-- Throw `Error` objects with descriptive messages, not strings or other values
-- Use `try-catch` blocks meaningfully - don't catch errors just to rethrow them
-- Prefer early returns over nested conditionals for error cases
-
-### Code Organization
-
-- Keep functions focused and under reasonable cognitive complexity limits
-- Extract complex conditions into well-named boolean variables
-- Use early returns to reduce nesting
-- Prefer simple conditionals over nested ternary operators
-- Group related code together and separate concerns
-- Avoid import cycles; move shared code into a module both sides import
-
-### Security
-
-- Add `rel="noopener noreferrer"` when using `target="_blank"` on links
-- Avoid `dangerouslySetInnerHTML` unless absolutely necessary
-- Don't use `eval()` or assign directly to `document.cookie`
-- Validate and sanitize user input
-
-### Performance
-
-- Avoid spread syntax in accumulators within loops
-- Use top-level regex literals instead of creating them in loops
-- Prefer specific imports over namespace imports
-- Avoid barrel files (index files that re-export everything)
-- Use proper image components (e.g., Next.js `<Image>`) over `<img>` tags
-
-### Framework-Specific Guidance
-
-**Next.js:**
-
-- Use Next.js `<Image>` component for images
-- Use `next/head` or App Router metadata API for head elements
-- Use Server Components for async data fetching instead of async Client Components
-
-**React 19+:**
-
-- Use ref as a prop instead of `React.forwardRef`
-
-**Solid/Svelte/Vue/Qwik:**
-
-- Use `class` and `for` attributes (not `className` or `htmlFor`)
-
----
-
-## Testing
-
-- Write assertions inside `it()` or `test()` blocks
-- Avoid done callbacks in async tests - use async/await instead
-- Don't use `.only` or `.skip` in committed code
-- Keep test suites reasonably flat - avoid excessive `describe` nesting
-
-## When Oxlint + Oxfmt Can't Help
-
-Oxlint + Oxfmt will catch most mechanical issues automatically. Focus your attention on:
-
-1. **Business logic correctness** - Oxlint + Oxfmt can't validate your algorithms
-2. **Meaningful naming** - Use descriptive names for functions, variables, and types
-3. **Architecture decisions** - Component structure, data flow, and API design
-4. **Edge cases** - Handle boundary conditions and error states
-5. **User experience** - Accessibility, performance, and usability considerations
-6. **Documentation** - Add comments for complex logic, but prefer self-documenting code
-
----
-
-Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `pnpm exec vp check --fix` before committing to ensure compliance.
+- [Tooling and lint config](docs/agents/tooling.md): changing lint/format setup, pre-commit hooks, or ignore patterns
+- [TypeScript conventions](docs/agents/typescript.md): writing any `.ts`/`.tsx`
+- [React and UI](docs/agents/react.md): working in `apps/web` or `packages/ui`
+- [Database](docs/agents/database.md): changing `packages/db` schema or migrations
