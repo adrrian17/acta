@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "skills": {
+    "accessibility": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "2174f783a038a7ca4869c4c18e14726ec13b9c6b705d59253f647d0ca37cb78d"
+    },
+    "best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "db4a1edfec63f4eaf5f0b1278f4e4b004768d8765708f94960c3ca2334caced9"
+    },
+    "better-auth-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/best-practices/SKILL.md",
+      "computedHash": "0c30be0e118c2b7a0c4c57bd9e63bf110c7e420a79ec6ce7997153f3b1e066ee"
+    },
+    "better-auth-security-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "security/SKILL.md",
+      "computedHash": "7a230edf3a24ce18162cb4379f59b6a19b8d24ca04db530609d0f15cede556dc"
+    },
+    "build-audit-logs": {
+      "source": "evlog.dev",
+      "sourceUrl": "https://www.evlog.dev",
+      "sourceType": "well-known",
+      "computedHash": "00ad2639d2da50af9922c0f61c2315564bbe6b29cb02d421f042db105fd11a03",
+      "wellKnownDigest": "sha256:b23d47912c43ca0ef77c001186fcefe57133d5872124c368881e1424ae4b9836"
+    },
+    "bun": {
+      "source": "midudev/autoskills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "1386ed5490ed278e38312a416c9aa074dbe3849f32ae7f841e4142fef5d4df94"
+    },
+    "cloudflare": {
+      "source": "cloudflare/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "4d6a83421587be79602210c00c15475bb1f7e0fe9715935f15b473fea7351ec9"
+    },
+    "cloudflare-deploy": {
+      "source": "openai/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "a0e0265fb534369d95944a58ab25159b7838f62abdcd86afa2266d69b3309561"
+    },
+    "composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "c124390cc3441844903ada94cb5820b23d922f2d0ad34e01e029e410197c8a32"
+    },
+    "drizzle": {
+      "source": "bobmatnyc/claude-mpm-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "329c51bff48a92ddc4668c0396104ef47615db01b12ca894c2b322cbba19c0f0"
+    },
+    "email-and-password-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/emailAndPassword/SKILL.md",
+      "computedHash": "863886759f729081e265941f4f72c503835d55a1f34f6d63cebe6571159fff4a"
+    },
+    "emailAndPassword": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "f19e76b069b8569a6906f9dc38c3b7dbdce83da7a5577f6b3c844a95db29d30d"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "a4e6516a601f72ffd8bcd0d64609e8ba724d2ce92569a059a6890a5caadf072b"
+    },
+    "hono": {
+      "source": "honojs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hono/SKILL.md",
+      "computedHash": "f469bac28a53d010bb47bd61109d0cfebe9a4f3fd407310746114549886b5870"
+    },
+    "migrate-to-vinext": {
+      "source": "cloudflare/vinext",
+      "sourceType": "autoskills-registry",
+      "computedHash": "2392d495b5b5c579e90a1f04f8055bb5bf9d0233341772f766042ffbc018af28"
+    },
+    "nodejs-backend-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "autoskills-registry",
+      "computedHash": "ec099fc7d7ece12e8a89c24b12eff36f27dd243db15c5a70f3df8406ec9c738e"
+    },
+    "nodejs-best-practices": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "2c543ab51c9c4093c8a94aa615f39ca55d93835816aeeaa5bbd89261d85c584c"
+    },
+    "organization": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "4ffd93096f81a88450e4428ee0ad8b4af60a235ee96b61b624f3b5fe8f046463"
+    },
+    "react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "502eb06700e2c3cb1bd7f710860528f72281320bd5171a2087b05a090b573dc1"
+    },
+    "review-logging-patterns": {
+      "source": "evlog.dev",
+      "sourceUrl": "https://www.evlog.dev",
+      "sourceType": "well-known",
+      "computedHash": "96858a9f88502382975c0b5e84f04561ddfaed29bc26ae27d03e6ff38440e246",
+      "wellKnownDigest": "sha256:23d7940003f7b6889c8032933bc3ec3aaa545a088c5a48be450627f5656cb1fd"
+    },
+    "seo": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "7495da57766c99f787a729d4a21234ecb5d29d90f304a0d9a5996dcdc1eec048"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "b864a958765563321f485a96f4d59c0bb6539f4286ab6d8b8b66895b7ebd302d"
+    },
+    "tailwind-css-patterns": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "autoskills-registry",
+      "computedHash": "8fd534b64b3f305ade80c207e2f9ba4338d5e409e355af9f724c36764b6709c1"
+    },
+    "tailwind-v4-shadcn": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "c4cbd4cecb0da6f7f9e3c8826da87f3d05feb586e3560e62d89b95ab22b8df35"
+    },
+    "twoFactor": {
+      "source": "better-auth/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "6f81f0ece8181797011da7dbd1180cdce2a92d88611833d8e2219a977b8189ed"
+    },
+    "typescript-advanced-types": {
+      "source": "wshobson/agents",
+      "sourceType": "autoskills-registry",
+      "computedHash": "cb5d18bc19191b388cc49c15ff98dcbc714fa343373d078be00833e8a18ef291"
+    },
+    "ultracite": {
+      "source": "haydenbleasel/ultracite",
+      "sourceType": "github",
+      "skillPath": "skills/ultracite/SKILL.md",
+      "computedHash": "c543d7dd84476545b8f65d14af9ec5e221eb8ee14ebe801cd4315638551d8663"
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/composition-patterns/SKILL.md",
+      "computedHash": "f98931159fa9c7fed043bcd18a891a46dcf89ababa38df13a4c5b7b30dc0ce07"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "3219a1944e404ffc14d1d9d6aef6dd2e3855b81387ee0a044ccbfe14d34c2357"
+    },
+    "vite": {
+      "source": "antfu/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "9b57a2fff4dbb3c38e7f2e511f4125784f11cd67f54e89d3e7d9c57fe5834bd5"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    },
+    "web-perf": {
+      "source": "cloudflare/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "11a1e86ab32c0acedcb291f159a75fd22c15e251bbd85e7db1bc9ef86e6371e8"
+    },
+    "workers-best-practices": {
+      "source": "cloudflare/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "6b7003971822236bb9e4ab8cb623276442c93de29f844acb519a94c8a6fac2ec"
+    },
+    "wrangler": {
+      "source": "cloudflare/skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "0ed898a7205a09839dbf279d0759f4ab3f07d45189b216383a813e6e8179b09d"
+    },
+    "zod": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "autoskills-registry",
+      "computedHash": "2e6455bb2c68a46f88db0fef1151cdb4d0a50b57b6a0cdbe7fa3b68641adf45b"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+{
+  "extends": "@acta/config/tsconfig.base.json"
+}
