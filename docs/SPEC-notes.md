@@ -44,7 +44,7 @@ Timeline and views
 13. The Timeline lists Pinned Notes first, then the rest by creation time, newest first. Editing a Note does not move it.
 14. Paging through the Timeline, Archive or Trash with an unchanged data set returns every Note exactly once.
 15. The "untagged" filter returns exactly the Timeline Notes with no Tags.
-16. The Archive view lists Archived Notes newest-created first. The Trash view lists Trashed Notes most recently trashed first, each showing the date it will be purged.
+16. The Archive view lists Archived Notes newest-created first. The Trash view lists Trashed Notes most recently trashed first, each showing the date after which it will be purged.
 
 Tag panel
 
@@ -175,7 +175,7 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `archive` / `unarchive` / `trash` / `restore` | `{ id, version }` | `Note` | `NOT_FOUND`, `CONFLICT`, `PRECONDITION_FAILED` |
 | `deletePermanently` | `{ id }` | `{ id }` | `NOT_FOUND`, `PRECONDITION_FAILED` (Note not Trashed) |
 
-`Note` = `{ id, content, state, pinned, version, tags: string[], createdAt, updatedAt, trashedAt, purgeAt }`. Dates are epoch milliseconds. `purgeAt` is `trashedAt + 30 days` for Trashed Notes, otherwise `null`.
+`Note` = `{ id, content, state, pinned, version, tags: string[], createdAt, updatedAt, trashedAt, purgeAt }`. Dates are epoch milliseconds. `purgeAt` is `trashedAt + 30 days` for Trashed Notes, otherwise `null`. It is the earliest time the daily purge can delete the Note, not the exact deletion time.
 
 `tags` router
 
@@ -185,7 +185,7 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `rename` | `{ from, to }` | `{ changed: number, skipped: number }` | `BAD_REQUEST`, `NOT_FOUND` (no Note has `from`) |
 | `delete` | `{ tag }` | `{ changed: number, skipped: number }` | `BAD_REQUEST`, `NOT_FOUND` |
 
-**Atomic writes.** Each Note write is one `db.batch`: a conditional `UPDATE note … WHERE id = ? AND version = ?`, followed by tag-row statements that run only if that update took effect (conditioned on the new `version`). A save that loses the version check therefore changes neither content nor Tags. Rename and delete apply this per Note, so a concurrent edit to one Note makes only that Note skip, and it counts as skipped. D1 caps bound parameters at 100 per statement, so batches are chunked to stay under it.
+**Atomic writes.** Each Note write is one `db.batch` whose statements are all guarded by the version the client sent. The tag-row statements come first, each conditioned on `note.version = ?` (the expected old version). The batch ends with the conditional `UPDATE note … SET version = version + 1 WHERE id = ? AND version = ?`. Guarding the Tags on the new version would not work: after another save moves the Note from `v` to `v + 1`, a stale save's `UPDATE` matches nothing, but tag statements guarded on `v + 1` would still match and change the Tags. Because the batch runs as one transaction and the version only moves in its last statement, a save that loses the version check changes neither content nor Tags. Rename and delete apply this per Note, so a concurrent edit to one Note makes only that Note skip, and it counts as skipped. D1 caps bound parameters at 100 per statement, so batches are chunked to stay under it.
 
 **Cursor.** Opaque base64url of the last row's sort key: `(pinned, createdAt, id)` for Timeline and Archive, `(trashedAt, id)` for Trash. `id` breaks ties so that equal timestamps neither skip nor repeat.
 
@@ -215,7 +215,7 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `note.trash` / `note.restore` | Move to trash / Restore |
 | `note.deletePermanently` | Delete permanently |
 | `note.deletePermanently.confirm` | Delete this note permanently? This can't be undone. |
-| `note.purgeAt` | Deleted on {date} |
+| `note.purgeAt` | Deleted after {date} |
 | `tags.title` | Tags |
 | `tags.untagged` | Untagged |
 | `tags.rename` / `tags.delete` | Rename / Delete |
@@ -271,7 +271,7 @@ export const noteContent = z
   - `lifecycle.test.ts`: the full transition matrix (every allowed and every disallowed pair) and the pin rules.
   - `content.test.ts`: empty, whitespace-only, exactly 100,000 code points, 100,001 code points, and a 100,000-emoji string (to prove code points, not UTF-16 units).
   - `cursor.test.ts`: round-trip, and a garbage cursor rejected.
-- **Integration (router + D1):** run the routers against a local D1 through Miniflare or Alchemy dev. Cover the conflict pair (criterion 20), atomicity (a rejected save leaves Tags untouched), pagination with equal `createdAt` values and Pinned Notes spanning pages (criterion 14), rename and delete skipping (criterion 12), and the purge boundary at 29 and 30 days with a fixed `now` (criterion 5). If wiring a local D1 into `vp test` proves too costly, these become a scripted manual check against `pnpm dev` and are recorded in the plan.
+- **Integration (router + D1):** run the routers against a local D1 through Miniflare or Alchemy dev. Cover the conflict pair (criterion 20), atomicity (a rejected save leaves Tags untouched, including a stale save that arrives after a newer one has already moved the `version`), pagination with equal `createdAt` values and Pinned Notes spanning pages (criterion 14), rename and delete skipping (criterion 12), and the purge boundary at 29 and 30 days with a fixed `now` (criterion 5). If wiring a local D1 into `vp test` proves too costly, these become a scripted manual check against `pnpm dev` and are recorded in the plan.
 - **Manual (UI):** criteria 1, 16, 17 and 21 against `pnpm dev`, including the conflict dialog with two browser windows.
 - Every acceptance criterion maps to at least one of the above.
 
