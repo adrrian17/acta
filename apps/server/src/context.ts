@@ -1,6 +1,7 @@
 import type { Context as ApiContext } from "@acta/api/context";
 import type { Context as HonoContext } from "hono";
 
+import { ENV } from "./env.server";
 import { getDb, createAuth } from "./services";
 
 export interface CreateContextOptions {
@@ -19,6 +20,7 @@ export async function createContext({
   return {
     db,
     session,
+    ownerGithubId: ENV.OWNER_GITHUB_ID,
   };
 }
 

@@ -5,4 +5,5 @@ import type { Database } from "@acta/db";
 export type Context = {
   session: Session | null;
   db: Database;
+  ownerGithubId: string;
 };
