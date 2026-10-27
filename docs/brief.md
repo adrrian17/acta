@@ -81,7 +81,7 @@ Only `owner-access` and `notes` are detailed below. Every other module needs its
 
 ### Concurrent edits
 
-- Every save carries the version the client last read (for example `updatedAt`).
+- Every save carries the integer `version` the client last read.
 - If the Note changed since then, the save is rejected with "this note changed on another device", and the Owner can reload or overwrite.
 
 ### Acceptance criteria
@@ -102,15 +102,17 @@ Only `owner-access` and `notes` are detailed below. Every other module needs its
 - Teams, roles, members, shared or public visibility, share links, generated note cards, public articles.
 - Compatibility with other note apps' APIs, plugins, custom branding.
 - Voice capture and transcription.
-- Languages other than Spanish and English.
+- A UI in any language other than English, and a language switch. Note content can be in any language.
 - Local drafts, offline queue and sync.
 - Rediscovery (daily review, random walk), statistics, heatmaps and calendar views.
 - Projects. Tasks created from Notes.
 - A rich-text (WYSIWYG) editor. It can replace the textarea later without migrating data, since storage stays Markdown.
 - Email and password sign-in, Google sign-in.
 
-## Open questions for the spec
+## Resolved questions
 
-- Exact UI copy and the Spanish/English language switch.
-- Where the 30-day purge runs (Workers Cron Trigger through Alchemy).
-- Which Markdown renderer the preview uses, and how it sanitizes HTML.
+Settled while writing the module specs; details live in [SPEC-owner-access.md](./SPEC-owner-access.md) and [SPEC-notes.md](./SPEC-notes.md).
+
+- UI copy is English only, with no language switch. Exact copy is listed in each spec.
+- The 30-day purge runs as a daily Workers Cron Trigger (`0 3 * * *`) on the `server` Worker, declared in Alchemy.
+- The preview uses `@tanstack/markdown` with raw HTML off; Tags are parsed by acta's own tokenizer on the server.
