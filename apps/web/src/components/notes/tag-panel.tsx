@@ -69,14 +69,17 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
       <AlertDialogTrigger
         render={
           <Button
-            variant="ghost"
+            variant="ghost-static"
             size="icon-xs"
             aria-label={`${COPY.rename} #${node.path}`}
             title={COPY.rename}
           />
         }
       >
-        <Pencil aria-hidden />
+        <Pencil
+          aria-hidden
+          className="text-muted-foreground group-data-[active=true]:text-primary transition-colors"
+        />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -123,14 +126,17 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
       <AlertDialogTrigger
         render={
           <Button
-            variant="ghost"
+            variant="ghost-static"
             size="icon-xs"
             aria-label={`${COPY.delete} #${node.path}`}
             title={COPY.delete}
           />
         }
       >
-        <Trash2 aria-hidden />
+        <Trash2
+          aria-hidden
+          className="text-muted-foreground group-data-[active=true]:text-primary transition-colors"
+        />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -173,6 +179,7 @@ function FilterRow({
         "group hover:bg-muted flex items-center gap-1 rounded-md border border-transparent pr-1 transition-colors",
         isActive && "bg-accent hover:bg-accent border-primary/60"
       )}
+      data-active={isActive}
     >
       <Link
         to="/"
