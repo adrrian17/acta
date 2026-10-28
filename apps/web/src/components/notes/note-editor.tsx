@@ -1,7 +1,7 @@
 import { Button } from "@acta/ui/components/button";
 import { Label } from "@acta/ui/components/label";
 import { Textarea } from "@acta/ui/components/textarea";
-import { Eye, Hash, List, SendHorizontal } from "lucide-react";
+import { Eye, Hash, List, Save } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import { COPY } from "./copy";
@@ -210,7 +210,7 @@ export function NoteEditor({
             title={COPY.send}
             disabled={saving || error !== null}
           >
-            <SendHorizontal aria-hidden />
+            <Save aria-hidden />
           </Button>
         ) : (
           <div className="flex gap-2">
