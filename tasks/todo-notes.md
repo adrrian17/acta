@@ -81,8 +81,8 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, glos
 
 **Acceptance criteria:**
 
-- [ ] `packages/api/src/test/d1.ts` implements the D1 surface `drizzle-orm/d1` uses, applies all migrations, enables foreign keys, and runs `batch` in one transaction.
-- [ ] A smoke test proves migrations apply, deleting a `note` cascades its `note_tag` rows, and a failing statement rolls back the whole batch.
+- [x] `packages/api/src/test/d1.ts` implements the D1 surface `drizzle-orm/d1` uses, applies all migrations, enables foreign keys, and runs `batch` in one transaction.
+- [x] A smoke test proves migrations apply, deleting a `note` cascades its `note_tag` rows, and a failing statement rolls back the whole batch.
 
 **Files:** `packages/api/src/test/{d1,caller}.ts`, `d1.test.ts` (new).
 
@@ -90,13 +90,15 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, glos
 
 ## Task 6: notes router
 
-**Description:** Every `notes` procedure from the spec's Interfaces, with guarded batches, `meta.changes` checks and the single-statement permanent delete. Remove `privateData`.
+**Description:** Every `notes` procedure from the spec's Interfaces, with guarded batches, `meta.changes` checks and the single-statement permanent delete. `privateData` is removed with `/dashboard` in Task 9, which still uses it.
 
 **Acceptance criteria:**
 
-- [ ] Router tests for AC 1 (API), 2–4, 6, 9, 13–16, 19, 20 and 22 (notes writes), including a stale save after a newer one leaving Tags untouched and paging with equal `createdAt` and Pinned Notes across pages.
+- [x] Router tests for AC 1 (API), 2–4, 6, 9, 13–16, 19, 20 and 22 (notes writes), including a stale save after a newer one leaving Tags untouched and paging with equal `createdAt` and Pinned Notes across pages.
 
-**Files:** `packages/api/src/routers/{notes,index}.ts`, `notes.test.ts`, `packages/api/src/notes/note.ts` (row → `Note` mapper).
+**Files:** `packages/api/src/routers/{notes,index}.ts`, `notes.test.ts`, `packages/api/src/notes/{note,store}.ts` (row → `Note` mapper, guarded writes).
+
+**Not covered by a test:** the per-Note skip in Task 7 when a concurrent edit lands mid-rename; `writeNote`'s guard is proven by the AC 19/20 tests instead.
 
 **Scope:** M
 
@@ -106,7 +108,7 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, glos
 
 **Acceptance criteria:**
 
-- [ ] Router tests for AC 10–12, 17, 18 and 22 (tag writes), including Trashed Notes untouched and per-Note skip on a concurrent edit.
+- [x] Router tests for AC 10–12, 17, 18 and 22 (tag writes), including Trashed Notes untouched and per-Note skip on a concurrent edit.
 
 **Files:** `packages/api/src/routers/{tags,index}.ts`, `tags.test.ts`.
 
@@ -118,8 +120,8 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, glos
 
 **Acceptance criteria:**
 
-- [ ] Integration test at 29 and 30 days with a fixed `now` (AC 5).
-- [ ] `alchemy.run.ts` declares `crons: ["0 3 * * *"]`; `apps/server/src/index.ts` exports `fetch` and `scheduled`.
+- [x] Integration test at 29 and 30 days with a fixed `now` (AC 5).
+- [x] `alchemy.run.ts` declares `crons: ["0 3 * * *"]`; `apps/server/src/index.ts` exports `fetch` and `scheduled`.
 
 **Files:** `packages/api/src/notes/purge.ts`, `purge.test.ts`, `apps/server/src/index.ts`, `packages/infra/alchemy.run.ts`.
 
@@ -132,7 +134,7 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, glos
 
 ## Task 9: Timeline UI
 
-**Description:** `/` becomes the Timeline: composer with Write/Preview, Note cards with preview, edit, pin, archive, trash, Load more. Delete `/dashboard` and the scaffold landing. Header links.
+**Description:** `/` becomes the Timeline: composer with Write/Preview, Note cards with preview, edit, pin, archive, trash, Load more. Delete `/dashboard`, the scaffold landing and the `privateData` procedure. Point the login `callbackURL` at `/`. Header links.
 
 **Pre-step:** confirm `@tanstack/markdown` 1.0.0 can disable raw HTML and autolinks; stop and ask if not.
 

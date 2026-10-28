@@ -53,14 +53,14 @@ T1–T4 are independent of each other.
 
 ### Phase 2: API
 
-- [ ] Task 5: In-process D1 test harness with a smoke test (migrations apply, cascade works, `batch` rolls back)
-- [ ] Task 6: `notes` router: list, get, create, update, setPinned, archive, unarchive, trash, restore, deletePermanently; remove `privateData` (AC 1 API, 2–4, 6, 9, 13–16, 19, 20, 22)
-- [ ] Task 7: `tags` router: tree, rename, delete (AC 10–12, 17, 18, 22)
-- [ ] Task 8: `purgeTrashedNotes`, `scheduled` handler, cron in Alchemy (AC 5)
+- [x] Task 5: In-process D1 test harness with a smoke test (migrations apply, cascade works, `batch` rolls back)
+- [x] Task 6: `notes` router: list, get, create, update, setPinned, archive, unarchive, trash, restore, deletePermanently (`privateData` moves to Task 9) (AC 1 API, 2–4, 6, 9, 13–16, 19, 20, 22)
+- [x] Task 7: `tags` router: tree, rename, delete (AC 10–12, 17, 18, 22)
+- [x] Task 8: `purgeTrashedNotes`, `scheduled` handler, cron in Alchemy (AC 5)
 
 ### Checkpoint: API
 
-- [ ] All API-level ACs pass in `pnpm test`
+- [x] All API-level ACs pass in `pnpm test`
 - [ ] Manual against `pnpm dev`: create, stale update gets `CONFLICT`, rename a Tag (real D1, real param cap)
 - [ ] Review with the human before Phase 3
 
