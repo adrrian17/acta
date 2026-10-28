@@ -61,7 +61,7 @@ T1–T4 are independent of each other.
 ### Checkpoint: API
 
 - [x] All API-level ACs pass in `pnpm test`
-- [ ] Manual against `pnpm dev`: create, stale update gets `CONFLICT`, rename a Tag (real D1, real param cap)
+- [x] Manual against `pnpm dev`: create, stale update gets `CONFLICT`, rename a Tag (real D1, real param cap)
 - [ ] Review with the human before Phase 3
 
 ### Phase 3: UI
@@ -73,7 +73,7 @@ T1–T4 are independent of each other.
 
 ### Checkpoint: Complete
 
-- [ ] All 22 ACs pass through their test or manual check
+- [x] All 22 ACs pass through their test or manual check
 - [x] `pnpm check` and `pnpm test` pass; migration committed
 - [x] `rg "dangerouslySetInnerHTML|allowHtml: true" apps packages` returns nothing
 - [ ] After `pnpm deploy`, the dashboard shows the `0 3 * * *` trigger on `server`
