@@ -104,7 +104,7 @@ export function TopBar() {
         >
           <Menu aria-hidden />
         </SheetTrigger>
-        <SheetContent side="left" showCloseButton={false}>
+        <SheetContent side="left">
           <SheetTitle className="sr-only">{COPY.appName}</SheetTitle>
           <SheetDescription className="sr-only">
             {COPY.navLabel}

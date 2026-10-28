@@ -5,6 +5,7 @@ import { Eye, Hash, List, Save } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import { COPY } from "./copy";
+import { insertText } from "./insert-text";
 import { NotePreview } from "./note-preview";
 
 // Mirrors the server's content rules (NOTE_MAX_CHARS in @acta/api) so Save can explain itself.
@@ -34,28 +35,6 @@ function errorMessage(
   }
 
   return null;
-}
-
-/** Inserts `text` at the selection, or at the start of the caret's line when `atLineStart`. */
-function insertText(
-  value: string,
-  selection: { start: number; end: number },
-  text: string,
-  atLineStart: boolean
-) {
-  if (atLineStart) {
-    const lineStart = value.lastIndexOf("\n", selection.start - 1) + 1;
-
-    return {
-      value: value.slice(0, lineStart) + text + value.slice(lineStart),
-      caret: selection.end + text.length,
-    };
-  }
-
-  return {
-    value: value.slice(0, selection.start) + text + value.slice(selection.end),
-    caret: selection.start + text.length,
-  };
 }
 
 interface NoteEditorProps {

@@ -14,7 +14,7 @@
   --card-foreground: oklch(0.2 0.01 140);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.01 140);
-  --primary: oklch(0.58 0.2 142);
+  --primary: oklch(0.52 0.18 142);
   --primary-foreground: oklch(0.99 0.01 142);
   --secondary: oklch(0.96 0.008 140);
   --secondary-foreground: oklch(0.25 0.01 140);
@@ -35,7 +35,7 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0.004 140);
   --sidebar-foreground: oklch(0.2 0.01 140);
-  --sidebar-primary: oklch(0.58 0.2 142);
+  --sidebar-primary: oklch(0.52 0.18 142);
   --sidebar-primary-foreground: oklch(0.99 0.01 142);
   --sidebar-accent: oklch(0.95 0.06 142);
   --sidebar-accent-foreground: oklch(0.42 0.15 142);
