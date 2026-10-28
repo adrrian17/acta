@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 
 import { ModeToggle } from "./mode-toggle";
+import { COPY } from "./notes/copy";
 import UserMenu from "./user-menu";
 
 const links = [
-  { to: "/", label: "Home" },
-  { to: "/dashboard", label: "Dashboard" },
+  { to: "/", label: COPY.navTimeline },
+  { to: "/archive", label: COPY.navArchive },
+  { to: "/trash", label: COPY.navTrash },
 ] as const;
 
 export default function Header() {

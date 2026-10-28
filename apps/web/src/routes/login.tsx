@@ -28,7 +28,7 @@ async function signInWithGithub() {
   // Absolute URLs: Better Auth resolves relative ones against the server's origin.
   const { error } = await authClient.signIn.social({
     provider: "github",
-    callbackURL: `${window.location.origin}/dashboard`,
+    callbackURL: `${window.location.origin}/`,
     errorCallbackURL: `${window.location.origin}/login`,
   });
 
