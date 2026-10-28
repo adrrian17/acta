@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { protectedProcedure, router } from "../index";
 import { noteContent } from "../notes/content";
-import { taggedWith, untagged, writeNote } from "../notes/store";
+import { taggedWith, untagged, writeNotes } from "../notes/store";
 import { buildTagTree } from "../notes/tag-tree";
 import {
   canRenameTag,
@@ -44,27 +44,30 @@ async function rewriteTagged(
 
   const now = new Date();
 
-  const outcomes = await Promise.all(
-    affected.map(async (row) => {
-      const content = rewrite(row.content);
+  const rewrites = affected.map((row) => ({
+    row,
+    content: rewrite(row.content),
+  }));
 
-      if (!noteContent.safeParse(content).success) {
-        return false;
-      }
+  const valid = rewrites.filter(
+    ({ content }) => noteContent.safeParse(content).success
+  );
 
-      return await writeNote(db, {
-        id: row.id,
-        expectedVersion: row.version,
-        now,
-        patch: { content },
-        tags: extractTags(content),
-      });
-    })
+  // All Notes in one batch: one D1 query however many Notes carry the Tag.
+  const outcomes = await writeNotes(
+    db,
+    valid.map(({ row, content }) => ({
+      id: row.id,
+      expectedVersion: row.version,
+      now,
+      patch: { content },
+      tags: extractTags(content),
+    }))
   );
 
   const changed = outcomes.filter(Boolean).length;
 
-  return { changed, skipped: outcomes.length - changed };
+  return { changed, skipped: affected.length - changed };
 }
 
 export const tagsRouter = router({

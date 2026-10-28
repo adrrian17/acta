@@ -25,9 +25,17 @@ import { NotePreview } from "./note-preview";
 
 const onSuccess = invalidateNotes;
 
+// The card is out of date: the Note changed, is gone, or is no longer in that state.
+const STALE_NOTE_CODES = new Set([
+  "CONFLICT",
+  "NOT_FOUND",
+  "PRECONDITION_FAILED",
+]);
+
 function onError(error: { message: string; data?: { code?: string } | null }) {
-  // A stale card lost a version check: show the current Note instead.
-  if (error.data?.code === "CONFLICT") {
+  const code = error.data?.code;
+
+  if (code !== undefined && STALE_NOTE_CODES.has(code)) {
     void invalidateNotes();
   }
 
@@ -55,7 +63,7 @@ export function NoteCard({ note }: { note: Note }) {
           return;
         }
 
-        toast.error(error.message);
+        onError(error);
       },
     })
   );
@@ -74,8 +82,9 @@ export function NoteCard({ note }: { note: Note }) {
 
       update.mutate({ id: note.id, version: current.version, content });
     } catch {
-      // The Note is gone; the query cache already reported it.
+      // The Note is gone; the query cache already reported it. Drop the stale card.
       setConflict(null);
+      void invalidateNotes();
     }
   };
 
@@ -240,6 +249,7 @@ export function NoteCard({ note }: { note: Note }) {
                     <AlertDialogCancel>{COPY.cancel}</AlertDialogCancel>
                     <AlertDialogAction
                       variant="destructive"
+                      disabled={deletePermanently.isPending}
                       onClick={() => {
                         deletePermanently.mutate({ id: note.id });
                       }}
