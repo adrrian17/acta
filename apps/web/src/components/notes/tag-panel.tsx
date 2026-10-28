@@ -15,6 +15,7 @@ import { Label } from "@acta/ui/components/label";
 import { cn } from "@acta/ui/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Hash } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 
@@ -153,11 +154,12 @@ function FilterLink({
       search={isActive ? {} : filter}
       aria-current={isActive ? "true" : undefined}
       className={cn(
-        "flex min-w-0 flex-1 items-center justify-between gap-2 rounded px-1 hover:underline",
-        isActive && "bg-muted font-medium"
+        "text-muted-foreground hover:bg-accent/60 flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1 text-xs",
+        isActive && "bg-accent text-accent-foreground font-medium"
       )}
     >
-      <span className="truncate">{label}</span>
+      <Hash aria-hidden className="size-3.5 shrink-0" />
+      <span className="flex-1 truncate">{label}</span>
       <span className="text-muted-foreground text-xs">{count}</span>
     </Link>
   );
@@ -165,21 +167,23 @@ function FilterLink({
 
 function TagTree({ nodes, active }: { nodes: TagNode[]; active: TagFilter }) {
   return (
-    <ul className="grid gap-1">
+    <ul className="grid gap-0.5">
       {nodes.map((node) => (
         <li key={node.path}>
-          <div className="group flex items-center gap-1">
+          <div className="group flex items-center">
             <FilterLink
-              label={`#${node.name}`}
+              label={node.name}
               count={node.count}
               filter={{ tag: node.path }}
               isActive={active.tag === node.path}
             />
-            <RenameTag node={node} active={active} />
-            <DeleteTag node={node} active={active} />
+            <div className="flex lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
+              <RenameTag node={node} active={active} />
+              <DeleteTag node={node} active={active} />
+            </div>
           </div>
           {node.children.length > 0 && (
-            <div className="ml-3 border-l pl-2">
+            <div className="ml-3 border-l pl-1">
               <TagTree nodes={node.children} active={active} />
             </div>
           )}
@@ -195,9 +199,9 @@ export function TagPanel({ active }: { active: TagFilter }) {
   return (
     <nav
       aria-label={COPY.tagsTitle}
-      className="grid content-start gap-2 text-sm"
+      className="grid content-start gap-1 text-sm"
     >
-      <h2 className="font-semibold">{COPY.tagsTitle}</h2>
+      <h2 className="sr-only">{COPY.tagsTitle}</h2>
       {tree.data && (
         <>
           <TagTree nodes={tree.data.nodes} active={active} />

@@ -106,7 +106,7 @@ apps/web/src/routes/_auth/index.tsx     → Timeline (replaces dashboard.tsx; "/
 apps/web/src/routes/_auth/archive.tsx   → Archive view
 apps/web/src/routes/_auth/trash.tsx     → Trash view
 apps/web/src/components/notes/          → note-card, note-editor, note-preview, tag-panel, conflict-dialog
-apps/web/src/components/header.tsx      → links: Timeline, Archive, Trash
+apps/web/src/components/sidebar.tsx     → left sidebar (sheet below `lg`): nav with counts, tag panel
 apps/web/src/routes/index.tsx           → delete (scaffold landing)
 apps/web/src/routes/_auth/dashboard.tsx → delete
 ```
@@ -195,7 +195,8 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 
 ## UI
 
-- **Timeline (`/`):** a composer at the top (textarea with Write/Preview tabs; **Save** or ⌘/Ctrl+Enter), the tag panel beside the list on wide screens and in a toggle on narrow ones, and Note cards rendered with the preview. A Pinned Note shows a pin marker. Pages load with "Load more", one page of 30 at a time.
+- **Timeline (`/`):** a composer at the top (a card with a borderless textarea, Write/Preview tabs, `#` and list buttons, and **Send** or ⌘/Ctrl+Enter), and Note cards rendered with the preview. A Pinned Note shows a pin marker. The tag panel lives in the left sidebar on wide screens and in a sheet behind a hamburger on narrow ones. Pages load with "Load more", one page of 30 at a time.
+- **Note card:** a header with the relative creation time, the pin marker and a `⋯` menu holding every action, the preview, and a footer of tag chips that filter the Timeline.
 - **Note card actions:** Edit (the card turns into the editor, with the same Write/Preview tabs), Pin/Unpin, Archive, Trash. In Archive: Unarchive, Trash. In Trash: Restore, Delete permanently (with confirmation).
 - **Tag panel:** clicking a node filters the Timeline by it and its descendants, and "untagged" shows untagged Notes. Each node has Rename and Delete. Both confirm first, with the count of affected Notes.
 - **Errors:** the web app maps tRPC codes to copy, as in `owner-access`.
@@ -207,10 +208,17 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `nav.timeline` | Timeline |
 | `nav.archive` | Archive |
 | `nav.trash` | Trash |
+| `nav.appName` | acta |
+| `nav.label` | Views |
+| `nav.open` | Open navigation |
 | `composer.placeholder` | Write a note… Use #tags to organize it. |
 | `editor.write` | Write |
 | `editor.preview` | Preview |
 | `editor.save` | Save |
+| `composer.send` | Send |
+| `composer.insertTag` | Insert tag |
+| `composer.insertList` | Insert list item |
+| `note.actions` | Note actions |
 | `editor.cancel` | Cancel |
 | `note.pin` / `note.unpin` | Pin / Unpin |
 | `note.archive` / `note.unarchive` | Archive / Unarchive |
