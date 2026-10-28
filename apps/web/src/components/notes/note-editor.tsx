@@ -1,13 +1,7 @@
 import { Button } from "@acta/ui/components/button";
 import { Label } from "@acta/ui/components/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@acta/ui/components/tabs";
 import { Textarea } from "@acta/ui/components/textarea";
-import { Hash, List, SendHorizontal } from "lucide-react";
+import { Eye, Hash, List, SendHorizontal } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import { COPY } from "./copy";
@@ -80,7 +74,7 @@ export function NoteEditor({
   onCancel,
 }: NoteEditorProps) {
   const [content, setContent] = useState(initialContent);
-  const [tab, setTab] = useState("write");
+  const [previewing, setPreviewing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaId = useId();
   const errorId = useId();
@@ -121,60 +115,61 @@ export function NoteEditor({
 
   return (
     <form
-      className="grid gap-2"
+      className="grid"
       onSubmit={(event) => {
         event.preventDefault();
         save();
       }}
     >
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
-          <TabsTrigger value="write">{COPY.write}</TabsTrigger>
-          <TabsTrigger value="preview">{COPY.preview}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="write">
-          <Label htmlFor={textareaId} className="sr-only">
-            {label}
-          </Label>
-          <Textarea
-            id={textareaId}
-            ref={textareaRef}
-            value={content}
-            placeholder={COPY.composerPlaceholder}
-            aria-invalid={message !== null}
-            aria-describedby={message === null ? undefined : errorId}
-            variant="bare"
-            className="min-h-24 resize-none"
-            onChange={(event) => {
-              setContent(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                event.preventDefault();
-                save();
-              }
-            }}
-          />
-        </TabsContent>
-        <TabsContent value="preview">
-          <div className="min-h-24 px-1 py-2">
+      <div className="px-4 pt-3">
+        {previewing ? (
+          <div className="min-h-28 py-2">
             <NotePreview content={content} />
           </div>
-        </TabsContent>
-      </Tabs>
-      {message !== null && (
-        <p id={errorId} role="alert" className="text-destructive text-sm">
-          {message}
-        </p>
-      )}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex gap-1">
+        ) : (
+          <>
+            <Label htmlFor={textareaId} className="sr-only">
+              {label}
+            </Label>
+            <Textarea
+              id={textareaId}
+              ref={textareaRef}
+              value={content}
+              placeholder={COPY.composerPlaceholder}
+              aria-invalid={message !== null}
+              aria-describedby={message === null ? undefined : errorId}
+              variant="bare"
+              className="min-h-28 resize-none"
+              onChange={(event) => {
+                setContent(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  save();
+                }
+              }}
+            />
+          </>
+        )}
+        {message !== null && (
+          <p
+            id={errorId}
+            role="alert"
+            className="text-destructive pb-1 text-sm"
+          >
+            {message}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-2 px-3 pb-3">
+        <div className="text-muted-foreground flex items-center gap-1">
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
             aria-label={COPY.insertTag}
-            disabled={tab !== "write"}
+            disabled={previewing}
             onClick={() => {
               insert("#", false);
             }}
@@ -186,27 +181,47 @@ export function NoteEditor({
             variant="ghost"
             size="icon-sm"
             aria-label={COPY.insertList}
-            disabled={tab !== "write"}
+            disabled={previewing}
             onClick={() => {
               insert("- ", true);
             }}
           >
             <List aria-hidden />
           </Button>
-        </div>
-        <div className="flex gap-2">
-          {onCancel && (
-            <Button type="button" variant="ghost" onClick={onCancel}>
-              {COPY.cancel}
-            </Button>
-          )}
-          <Button type="submit" size="pill" disabled={saving || error !== null}>
-            {composing && (
-              <SendHorizontal aria-hidden data-icon="inline-start" />
-            )}
-            {composing ? COPY.send : COPY.save}
+          <span aria-hidden className="bg-border mx-1 h-4 w-px" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={COPY.preview}
+            aria-pressed={previewing}
+            onClick={() => {
+              setPreviewing((shown) => !shown);
+            }}
+          >
+            <Eye aria-hidden />
           </Button>
         </div>
+        {composing ? (
+          <Button
+            type="submit"
+            size="icon-sm"
+            aria-label={COPY.send}
+            title={COPY.send}
+            disabled={saving || error !== null}
+          >
+            <SendHorizontal aria-hidden />
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              {COPY.cancel}
+            </Button>
+            <Button type="submit" size="sm" disabled={saving || error !== null}>
+              {COPY.save}
+            </Button>
+          </div>
+        )}
       </div>
     </form>
   );

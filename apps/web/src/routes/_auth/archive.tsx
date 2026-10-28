@@ -9,10 +9,7 @@ export const Route = createFileRoute("/_auth/archive")({
 
 function ArchiveRoute() {
   return (
-    <main className="container mx-auto grid max-w-2xl content-start gap-4 px-4 py-4">
-      <h1 className="text-xl font-semibold max-lg:sr-only">
-        {COPY.navArchive}
-      </h1>
+    <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
       <NoteList view="archived" emptyText={COPY.emptyArchive} />
     </main>
   );

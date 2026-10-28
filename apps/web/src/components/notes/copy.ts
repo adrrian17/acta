@@ -13,7 +13,6 @@ export const COPY = {
   insertList: "Insert list item",
   noteActions: "Note actions",
   editorLabel: "Edit note",
-  write: "Write",
   preview: "Preview",
   save: "Save",
   cancel: "Cancel",
@@ -37,6 +36,7 @@ export const COPY = {
   conflictOverwrite: "Overwrite",
   tagsTitle: "Tags",
   untagged: "Untagged",
+  noTags: "No tags yet. Start organizing with #tag.",
   rename: "Rename",
   delete: "Delete",
   renameLabel: "New tag name",
@@ -46,6 +46,7 @@ export const COPY = {
     `Remove #${tag} from ${count} notes? The rest of each note stays.`,
   tagsResult: (changed: number, skipped: number) =>
     `Updated ${changed} notes. ${skipped} skipped because they would end up empty or too long.`,
+  emptyTitle: "Nothing here yet",
   emptyTimeline: "No notes yet. Write your first one above.",
   emptyArchive: "No archived notes.",
   emptyTrash: "Trash is empty. Notes here are deleted after 30 days.",

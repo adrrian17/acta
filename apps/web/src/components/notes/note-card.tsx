@@ -134,34 +134,32 @@ export function NoteCard({ note }: { note: Note }) {
 
   if (editing) {
     return (
-      <Card>
-        <CardContent>
-          <NoteEditor
-            label={COPY.editorLabel}
-            initialContent={note.content}
-            saving={update.isPending}
-            onSave={(content) => {
-              update.mutate({ ...versioned, content });
-            }}
-            onCancel={() => {
-              setEditing(false);
-            }}
-          />
-          <ConflictDialog
-            open={conflict !== null}
-            pending={update.isPending}
-            onClose={() => {
-              setConflict(null);
-            }}
-            onReload={reload}
-            onOverwrite={() => {
-              if (conflict !== null) {
-                void overwrite(conflict);
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
+      <div className="bg-card focus-within:border-ring/60 rounded-xl border transition-colors">
+        <NoteEditor
+          label={COPY.editorLabel}
+          initialContent={note.content}
+          saving={update.isPending}
+          onSave={(content) => {
+            update.mutate({ ...versioned, content });
+          }}
+          onCancel={() => {
+            setEditing(false);
+          }}
+        />
+        <ConflictDialog
+          open={conflict !== null}
+          pending={update.isPending}
+          onClose={() => {
+            setConflict(null);
+          }}
+          onReload={reload}
+          onOverwrite={() => {
+            if (conflict !== null) {
+              void overwrite(conflict);
+            }
+          }}
+        />
+      </div>
     );
   }
 

@@ -9,7 +9,7 @@ import {
 } from "@acta/ui/components/sheet";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState, useSearch } from "@tanstack/react-router";
-import { Archive, Inbox, Menu, Trash2 } from "lucide-react";
+import { Archive, Feather, Inbox, Menu, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -35,9 +35,12 @@ function SidebarContent() {
   const search = useSearch({ strict: false });
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-lg font-semibold">{COPY.appName}</span>
+    <div className="flex h-full min-h-0 flex-col gap-6 px-3 py-4">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          <Feather aria-hidden className="text-primary size-5" />
+          {COPY.appName}
+        </span>
         <div className="flex items-center gap-1">
           <ModeToggle />
           <UserMenu />
@@ -49,18 +52,18 @@ function SidebarContent() {
             key={to}
             to={to}
             activeOptions={{ exact: true, includeSearch: false }}
-            className="text-muted-foreground hover:bg-accent/60 data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:before:bg-primary relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full data-[status=active]:font-medium"
+            className="text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:before:bg-primary relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:rounded-full"
           >
-            <Icon aria-hidden className="size-4" />
+            <Icon aria-hidden className="size-5" strokeWidth={1.75} />
             <span className="flex-1">{label}</span>
-            <span className="text-muted-foreground text-xs">
+            <span className="text-muted-foreground text-xs tabular-nums">
               {counts.data?.[state]}
             </span>
           </Link>
         ))}
       </nav>
       <hr />
-      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <TagPanel active={{ tag: search.tag, untagged: search.untagged }} />
       </div>
     </div>
@@ -75,7 +78,7 @@ export function DesktopSidebar() {
   );
 }
 
-export function MobileBar() {
+export function TopBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const href = useRouterState({ select: (s) => s.location.href });
   const title = NAV_ITEMS.find((item) => item.to === pathname)?.label;
@@ -84,7 +87,7 @@ export function MobileBar() {
   const [openedAt, setOpenedAt] = useState<string | null>(null);
 
   return (
-    <header className="bg-background sticky top-0 z-10 flex items-center gap-2 border-b px-3 py-2 lg:hidden">
+    <header className="bg-background sticky top-0 z-10 flex h-14 items-center gap-2 px-3 max-lg:border-b lg:px-4">
       <Sheet
         open={openedAt === href}
         onOpenChange={(open) => {
@@ -93,7 +96,12 @@ export function MobileBar() {
       >
         <SheetTrigger
           render={
-            <Button variant="ghost" size="icon" aria-label={COPY.openNav} />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              aria-label={COPY.openNav}
+            />
           }
         >
           <Menu aria-hidden />
@@ -106,7 +114,10 @@ export function MobileBar() {
           <SidebarContent />
         </SheetContent>
       </Sheet>
-      <span className="font-semibold">{title}</span>
+      <span aria-hidden className="text-muted-foreground max-lg:hidden">
+        /
+      </span>
+      <h1 className="text-sm font-semibold">{title}</h1>
     </header>
   );
 }

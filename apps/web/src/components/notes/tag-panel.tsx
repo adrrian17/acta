@@ -154,11 +154,11 @@ function FilterLink({
       search={isActive ? {} : filter}
       aria-current={isActive ? "true" : undefined}
       className={cn(
-        "text-muted-foreground hover:bg-accent/60 flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1 text-xs",
+        "text-muted-foreground hover:bg-accent/50 hover:text-foreground flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm",
         isActive && "bg-accent text-accent-foreground font-medium"
       )}
     >
-      <Hash aria-hidden className="size-3.5 shrink-0" />
+      <Hash aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
       <span className="flex-1 truncate">{label}</span>
       <span className="text-muted-foreground text-xs">{count}</span>
     </Link>
@@ -201,16 +201,24 @@ export function TagPanel({ active }: { active: TagFilter }) {
       aria-label={COPY.tagsTitle}
       className="grid content-start gap-1 text-sm"
     >
-      <h2 className="sr-only">{COPY.tagsTitle}</h2>
+      <h2 className="text-muted-foreground px-1 pb-1 text-xs">
+        {COPY.tagsTitle}
+      </h2>
       {tree.data && (
         <>
-          <TagTree nodes={tree.data.nodes} active={active} />
           <FilterLink
             label={COPY.untagged}
             count={tree.data.untaggedCount}
             filter={{ untagged: true }}
             isActive={active.untagged === true}
           />
+          {tree.data.nodes.length === 0 ? (
+            <p className="text-muted-foreground px-1 pt-1 text-xs">
+              {COPY.noTags}
+            </p>
+          ) : (
+            <TagTree nodes={tree.data.nodes} active={active} />
+          )}
         </>
       )}
     </nav>

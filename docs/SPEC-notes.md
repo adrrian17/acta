@@ -195,9 +195,9 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 
 ## UI
 
-- **Timeline (`/`):** a composer at the top (a card with a borderless textarea, Write/Preview tabs, `#` and list buttons, and **Send** or ⌘/Ctrl+Enter), and Note cards rendered with the preview. A Pinned Note shows a pin marker. The tag panel lives in the left sidebar on wide screens and in a sheet behind a hamburger on narrow ones. Pages load with "Load more", one page of 30 at a time.
+- **Timeline (`/`):** a composer at the top (a card with a borderless textarea, a toolbar with `#`, list and preview toggle buttons, and an icon-only **Send** button or ⌘/Ctrl+Enter), and Note cards rendered with the preview. A Pinned Note shows a pin marker. The tag panel lives in the left sidebar on wide screens and in a sheet behind a hamburger on narrow ones. Pages load with "Load more", one page of 30 at a time.
 - **Note card:** a header with the relative creation time, the pin marker and a `⋯` menu holding every action, the preview, and a footer of tag chips that filter the Timeline.
-- **Note card actions:** Edit (the card turns into the editor, with the same Write/Preview tabs), Pin/Unpin, Archive, Trash. In Archive: Unarchive, Trash. In Trash: Restore, Delete permanently (with confirmation).
+- **Note card actions:** Edit (the card turns into the editor, with the same toolbar and Save/Cancel), Pin/Unpin, Archive, Trash. In Archive: Unarchive, Trash. In Trash: Restore, Delete permanently (with confirmation).
 - **Tag panel:** clicking a node filters the Timeline by it and its descendants, and "untagged" shows untagged Notes. Each node has Rename and Delete. Both confirm first, with the count of affected Notes.
 - **Errors:** the web app maps tRPC codes to copy, as in `owner-access`.
 
@@ -212,7 +212,6 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `nav.label` | Views |
 | `nav.open` | Open navigation |
 | `composer.placeholder` | Write a note… Use #tags to organize it. |
-| `editor.write` | Write |
 | `editor.preview` | Preview |
 | `editor.save` | Save |
 | `composer.send` | Send |
@@ -228,6 +227,7 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `note.purgeAt` | Deleted after {date} |
 | `tags.title` | Tags |
 | `tags.untagged` | Untagged |
+| `tags.none` | No tags yet. Start organizing with #tag. |
 | `tags.rename` / `tags.delete` | Rename / Delete |
 | `tags.rename.confirm` | Rename #{from} to #{to} in {count} notes? |
 | `tags.delete.confirm` | Remove #{tag} from {count} notes? The rest of each note stays. |
@@ -237,6 +237,7 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `conflict.title` | This note changed on another device. |
 | `conflict.reload` | Reload |
 | `conflict.overwrite` | Overwrite |
+| `empty.title` | Nothing here yet |
 | `empty.timeline` | No notes yet. Write your first one above. |
 | `empty.archive` | No archived notes. |
 | `empty.trash` | Trash is empty. Notes here are deleted after 30 days. |

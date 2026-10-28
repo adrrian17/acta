@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@acta/ui/components/card";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -34,22 +33,17 @@ function TimelineRoute() {
   );
 
   return (
-    <main className="mx-auto grid max-w-2xl content-start gap-4 px-4 py-4">
-      <h1 className="text-xl font-semibold max-lg:sr-only">
-        {COPY.navTimeline}
-      </h1>
-      <Card>
-        <CardContent>
-          <NoteEditor
-            key={composerKey}
-            label={COPY.composerLabel}
-            saving={create.isPending}
-            onSave={(content) => {
-              create.mutate({ content });
-            }}
-          />
-        </CardContent>
-      </Card>
+    <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
+      <div className="bg-card focus-within:border-ring/60 rounded-xl border transition-colors">
+        <NoteEditor
+          key={composerKey}
+          label={COPY.composerLabel}
+          saving={create.isPending}
+          onSave={(content) => {
+            create.mutate({ content });
+          }}
+        />
+      </div>
       <NoteList
         view="timeline"
         emptyText={COPY.emptyTimeline}
