@@ -15,7 +15,7 @@ import { Label } from "@acta/ui/components/label";
 import { cn } from "@acta/ui/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Hash } from "lucide-react";
+import { Hash, Pencil, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import { toast } from "sonner";
 
@@ -65,8 +65,17 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="ghost" size="xs" />}>
-        {COPY.rename}
+      <AlertDialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`${COPY.rename} #${node.path}`}
+            title={COPY.rename}
+          />
+        }
+      >
+        <Pencil aria-hidden />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -110,8 +119,17 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="ghost" size="xs" />}>
-        {COPY.delete}
+      <AlertDialogTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={`${COPY.delete} #${node.path}`}
+            title={COPY.delete}
+          />
+        }
+      >
+        <Trash2 aria-hidden />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
