@@ -311,6 +311,6 @@ export const noteContent = z
 
 None. Resolved with the Owner while specifying:
 
-1. **Tag panel versus filter scope.** Panel counts include Timeline and Archived Notes, as the brief says, while clicking a node filters only the Timeline. A Tag used only in Archived Notes can therefore show a count and an empty Timeline. Accepted.
+1. **Tag panel versus filter scope.** The panel lists Tags from Timeline and Archived Notes, as the brief says, while clicking a node filters only the Timeline. A Tag used only in Archived Notes can therefore lead to an empty Timeline. Accepted. The panel does not show per-Tag counts; they only appear in the Rename and Delete confirmations.
 2. **Tag delete includes descendants.** Deleting `ideas` also removes `#ideas/libros`, matching rename, filtering and the tree.
 3. **Digits-only tokens are not Tags** (`#1`, `#2026`).

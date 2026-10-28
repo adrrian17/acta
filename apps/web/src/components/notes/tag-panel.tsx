@@ -157,13 +157,11 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
 
 function FilterRow({
   label,
-  count,
   filter,
   isActive,
   actions,
 }: {
   label: string;
-  count: number;
   filter: TagFilter;
   isActive: boolean;
   actions?: ReactNode;
@@ -189,7 +187,6 @@ function FilterRow({
       >
         <Hash aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
         <span className="flex-1 truncate">{label}</span>
-        <span className="text-xs tabular-nums opacity-70">{count}</span>
       </Link>
       {actions}
     </div>
@@ -203,7 +200,6 @@ function TagTree({ nodes, active }: { nodes: TagNode[]; active: TagFilter }) {
         <li key={node.path} className="grid gap-1">
           <FilterRow
             label={node.name}
-            count={node.count}
             filter={{ tag: node.path }}
             isActive={active.tag === node.path}
             actions={
@@ -240,7 +236,6 @@ export function TagPanel({ active }: { active: TagFilter }) {
         <>
           <FilterRow
             label={COPY.untagged}
-            count={tree.data.untaggedCount}
             filter={{ untagged: true }}
             isActive={active.untagged === true}
           />
