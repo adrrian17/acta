@@ -17,6 +17,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Hash, Pencil, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 import { invalidateNotes, trpc } from "@/utils/trpc";
@@ -154,54 +155,65 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
   );
 }
 
-function FilterLink({
+function FilterRow({
   label,
   count,
   filter,
   isActive,
+  actions,
 }: {
   label: string;
   count: number;
   filter: TagFilter;
   isActive: boolean;
+  actions?: ReactNode;
 }) {
   return (
-    <Link
-      to="/"
-      // Clicking the active filter again clears it.
-      search={isActive ? {} : filter}
-      aria-current={isActive ? "true" : undefined}
+    <div
       className={cn(
-        "text-muted-foreground hover:bg-accent/50 hover:text-foreground flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm",
-        isActive && "bg-accent text-accent-foreground font-medium"
+        "group bg-muted/50 hover:bg-muted flex items-center gap-1 rounded-md pr-1 transition-colors",
+        isActive && "bg-accent hover:bg-accent ring-primary/60 ring-1"
       )}
     >
-      <Hash aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
-      <span className="flex-1 truncate">{label}</span>
-      <span className="text-muted-foreground text-xs">{count}</span>
-    </Link>
+      <Link
+        to="/"
+        // Clicking the active filter again clears it.
+        search={isActive ? {} : filter}
+        aria-current={isActive ? "true" : undefined}
+        className={cn(
+          "text-muted-foreground group-hover:text-foreground flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+          isActive &&
+            "text-accent-foreground group-hover:text-accent-foreground font-medium"
+        )}
+      >
+        <Hash aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
+        <span className="flex-1 truncate">{label}</span>
+        <span className="text-xs tabular-nums opacity-70">{count}</span>
+      </Link>
+      {actions}
+    </div>
   );
 }
 
 function TagTree({ nodes, active }: { nodes: TagNode[]; active: TagFilter }) {
   return (
-    <ul className="grid gap-0.5">
+    <ul className="grid gap-1">
       {nodes.map((node) => (
-        <li key={node.path}>
-          <div className="group flex items-center">
-            <FilterLink
-              label={node.name}
-              count={node.count}
-              filter={{ tag: node.path }}
-              isActive={active.tag === node.path}
-            />
-            <div className="flex lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
-              <RenameTag node={node} active={active} />
-              <DeleteTag node={node} active={active} />
-            </div>
-          </div>
+        <li key={node.path} className="grid gap-1">
+          <FilterRow
+            label={node.name}
+            count={node.count}
+            filter={{ tag: node.path }}
+            isActive={active.tag === node.path}
+            actions={
+              <div className="text-muted-foreground flex">
+                <RenameTag node={node} active={active} />
+                <DeleteTag node={node} active={active} />
+              </div>
+            }
+          />
           {node.children.length > 0 && (
-            <div className="ml-3 border-l pl-1">
+            <div className="ml-3 border-l pl-2">
               <TagTree nodes={node.children} active={active} />
             </div>
           )}
@@ -224,7 +236,7 @@ export function TagPanel({ active }: { active: TagFilter }) {
       </h2>
       {tree.data && (
         <>
-          <FilterLink
+          <FilterRow
             label={COPY.untagged}
             count={tree.data.untaggedCount}
             filter={{ untagged: true }}
