@@ -87,7 +87,7 @@ export function TopBar() {
   const [openedAt, setOpenedAt] = useState<string | null>(null);
 
   return (
-    <header className="bg-background sticky top-0 z-10 flex h-14 items-center gap-2 px-3 max-lg:border-b lg:px-4">
+    <header className="bg-background sticky top-0 z-10 flex h-14 items-center gap-2 px-3 lg:px-4">
       <Sheet
         open={openedAt === href}
         onOpenChange={(open) => {
