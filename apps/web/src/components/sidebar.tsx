@@ -13,7 +13,6 @@ import { Archive, Feather, Inbox, Menu, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
-import { ModeToggle } from "@/components/mode-toggle";
 import { COPY } from "@/components/notes/copy";
 import { TagPanel } from "@/components/notes/tag-panel";
 import UserMenu from "@/components/user-menu";
@@ -36,15 +35,11 @@ function SidebarContent() {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6 px-3 py-4">
-      <div className="flex items-center justify-between gap-2 px-1">
+      <div className="px-1">
         <span className="flex items-center gap-2 text-sm font-semibold">
           <Feather aria-hidden className="text-primary size-5" />
           {COPY.appName}
         </span>
-        <div className="flex items-center gap-1">
-          <ModeToggle />
-          <UserMenu />
-        </div>
       </div>
       <nav aria-label={COPY.navLabel} className="grid gap-1">
         {NAV_ITEMS.map(({ to, label, icon: Icon, state }) => (
@@ -65,6 +60,9 @@ function SidebarContent() {
       <hr />
       <div className="min-h-0 flex-1 overflow-y-auto">
         <TagPanel active={{ tag: search.tag, untagged: search.untagged }} />
+      </div>
+      <div className="border-t pt-3">
+        <UserMenu />
       </div>
     </div>
   );

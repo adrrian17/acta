@@ -11,6 +11,7 @@ import {
 import { Skeleton } from "@acta/ui/components/skeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
 
+import { ModeToggle } from "@/components/mode-toggle";
 import { authClient } from "@/lib/auth-client";
 
 export default function UserMenu() {
@@ -18,20 +19,24 @@ export default function UserMenu() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <Skeleton className="h-9 w-24" />;
+    return <Skeleton className="h-9 w-full" />;
   }
 
   if (!session) {
     return (
       <Link to="/login">
-        <Button variant="outline">Sign In</Button>
+        <Button variant="outline" className="w-full justify-start">
+          Sign In
+        </Button>
       </Link>
     );
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
+      <DropdownMenuTrigger
+        render={<Button variant="outline" className="w-full justify-start" />}
+      >
         {session.user.name}
       </DropdownMenuTrigger>
       <DropdownMenuContent>
@@ -39,6 +44,8 @@ export default function UserMenu() {
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+          <ModeToggle />
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
             onClick={() => {
