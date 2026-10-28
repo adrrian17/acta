@@ -28,6 +28,18 @@ export const COPY = {
   conflictTitle: "This note changed on another device.",
   conflictReload: "Reload",
   conflictOverwrite: "Overwrite",
+  tagsTitle: "Tags",
+  tagsToggle: "Show tags",
+  untagged: "Untagged",
+  rename: "Rename",
+  delete: "Delete",
+  renameLabel: "New tag name",
+  renameConfirm: (from: string, to: string, count: number) =>
+    `Rename #${from} to #${to} in ${count} notes?`,
+  deleteConfirm: (tag: string, count: number) =>
+    `Remove #${tag} from ${count} notes? The rest of each note stays.`,
+  tagsResult: (changed: number, skipped: number) =>
+    `Updated ${changed} notes. ${skipped} skipped because they would end up empty or too long.`,
   emptyTimeline: "No notes yet. Write your first one above.",
   emptyArchive: "No archived notes.",
   emptyTrash: "Trash is empty. Notes here are deleted after 30 days.",
