@@ -13,6 +13,8 @@ export const server = Worker("server", {
   compatibility: {
     flags: ["nodejs_compat"],
   },
+  // Daily purge of Notes trashed 30+ days ago; handled by `scheduled` in apps/server.
+  crons: ["0 3 * * *"],
   env: {
     DB: db,
     CORS_ORIGIN: Config.String("CORS_ORIGIN"),

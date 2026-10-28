@@ -1,3 +1,4 @@
+import { purgeTrashedNotes } from "@acta/api/notes/purge";
 import { appRouter } from "@acta/api/routers/index";
 import { trpcServer } from "@hono/trpc-server";
 import { initLogger } from "evlog";
@@ -9,7 +10,7 @@ import { cors } from "hono/cors";
 
 import { createContext } from "./context";
 import { ENV } from "./env.server";
-import { createAuth } from "./services";
+import { createAuth, getDb } from "./services";
 
 initLogger({
   env: { service: "acta-server" },
@@ -57,4 +58,12 @@ app.use(
 
 app.get("/", (c) => c.text("OK"));
 
-export default app;
+export default {
+  fetch: app.fetch,
+  // Daily Cron Trigger (see alchemy.run.ts) that purges Notes trashed 30+ days ago.
+  scheduled(controller, _env, ctx) {
+    ctx.waitUntil(
+      purgeTrashedNotes(getDb(), new Date(controller.scheduledTime))
+    );
+  },
+} satisfies ExportedHandler;
