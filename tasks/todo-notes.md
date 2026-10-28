@@ -136,7 +136,7 @@ Every task also clears the standing bar: `pnpm check` and `pnpm test` pass, glos
 
 **Description:** `/` becomes the Timeline: composer with Write/Preview, Note cards with preview, edit, pin, archive, trash, Load more. Delete `/dashboard`, the scaffold landing and the `privateData` procedure. Point the login `callbackURL` at `/`. Header links.
 
-**Pre-step:** confirm `@tanstack/markdown` 1.0.0 can disable raw HTML and autolinks; stop and ask if not.
+**Pre-step (done):** `@tanstack/markdown` 1.0.0 escapes raw HTML (`allowHtml` is opt-in), does not autolink bare URLs and drops `javascript:` links by default, so no options are needed.
 
 **Acceptance criteria:** AC 1 (Timeline actions) and 13 checked manually; UI copy from the spec.
 

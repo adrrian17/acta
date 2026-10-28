@@ -66,16 +66,16 @@ T1–T4 are independent of each other.
 
 ### Phase 3: UI
 
-- [ ] Task 9: Timeline at `/` with composer, Write/Preview (`@tanstack/markdown`), cards, edit, pin, archive, trash, Load more; delete `/dashboard` and the scaffold landing; header nav (AC 1, 13)
-- [ ] Task 10: Archive and Trash views with Restore and Delete permanently, `purgeAt` display, empty states (AC 1, 16)
-- [ ] Task 11: Tag panel with tree, counts, untagged, filter, Rename and Delete with confirmation and result toast (AC 9, 15, 17, 18 UI)
-- [ ] Task 12: Conflict dialog with Reload and Overwrite; error-code copy mapping (AC 6 UI, 21)
+- [x] Task 9: Timeline at `/` with composer, Write/Preview (`@tanstack/markdown`), cards, edit, pin, archive, trash, Load more; delete `/dashboard` and the scaffold landing; header nav (AC 1, 13)
+- [x] Task 10: Archive and Trash views with Restore and Delete permanently, `purgeAt` display, empty states (AC 1, 16)
+- [x] Task 11: Tag panel with tree, counts, untagged, filter, Rename and Delete with confirmation and result toast (AC 9, 15, 17, 18 UI)
+- [x] Task 12: Conflict dialog with Reload and Overwrite; error-code copy mapping (AC 6 UI, 21)
 
 ### Checkpoint: Complete
 
 - [ ] All 22 ACs pass through their test or manual check
-- [ ] `pnpm check` and `pnpm test` pass; migration committed
-- [ ] `rg "dangerouslySetInnerHTML|allowHtml: true" apps packages` returns nothing
+- [x] `pnpm check` and `pnpm test` pass; migration committed
+- [x] `rg "dangerouslySetInnerHTML|allowHtml: true" apps packages` returns nothing
 - [ ] After `pnpm deploy`, the dashboard shows the `0 3 * * *` trigger on `server`
 
 ## Acceptance Criteria Coverage
