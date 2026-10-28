@@ -86,7 +86,7 @@ UI component:   pnpm dlx shadcn@latest add alert-dialog   # run from packages/ui
 ```
 packages/db/src/schema/notes.ts         → note and note_tag tables (new; exported from schema/index.ts)
 packages/db/src/relations.ts            → add note ↔ note_tag relations
-packages/db/src/migrations/             → generated migration (also the first one for the auth tables)
+packages/db/src/migrations/             → generated migration for note and note_tag
 
 packages/api/src/notes/tags.ts          → tokenizer: extractTags, renameTag, deleteTag, isValidTag (pure)
 packages/api/src/notes/tags.test.ts
@@ -295,7 +295,7 @@ export const noteContent = z
 - The page size is 30 and the maximum `limit` is 100.
 - Tags are filtered only in the Timeline. The Archive and Trash views have no filters.
 - A Note with no Tags shows no Tag chips. Tags appear in the card exactly as typed, inside the rendered text, with no separate chip list.
-- The first migration also creates the Better Auth tables, because none has been generated yet.
+- `owner-access` already generated the migration for the Better Auth tables, so `notes` adds its own migration.
 - `privateData`, `/dashboard` and the scaffold landing at `/` are removed.
 
 ## Open Questions

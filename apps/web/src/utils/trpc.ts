@@ -1,5 +1,5 @@
 import type { AppRouter } from "@acta/api/routers/index";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import {
   createTRPCClient,
   httpBatchLink,
@@ -10,16 +10,34 @@ import { toast } from "sonner";
 
 import { ENV } from "../env.public";
 
+// No session, or not the Owner's: a toast can't fix that, so go sign in.
+function redirectIfUnauthorized(error: Error): boolean {
+  if (
+    isTRPCClientError<AppRouter>(error) &&
+    error.data?.code === "UNAUTHORIZED"
+  ) {
+    window.location.assign("/login");
+
+    return true;
+  }
+
+  return false;
+}
+
 export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      // A mutation with its own onError (the conflict dialog) handles its errors itself.
+      if (redirectIfUnauthorized(error) || mutation.options.onError) {
+        return;
+      }
+
+      toast.error(error.message);
+    },
+  }),
   queryCache: new QueryCache({
     onError: (error, query) => {
-      // No session, or not the Owner's: a toast can't fix that, so go sign in.
-      if (
-        isTRPCClientError<AppRouter>(error) &&
-        error.data?.code === "UNAUTHORIZED"
-      ) {
-        window.location.assign("/login");
-
+      if (redirectIfUnauthorized(error)) {
         return;
       }
 
@@ -53,3 +71,11 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: trpcClient,
   queryClient,
 });
+
+/** Refetches every Note list and the tag panel after a write. */
+export async function invalidateNotes() {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: trpc.notes.pathKey() }),
+    queryClient.invalidateQueries({ queryKey: trpc.tags.pathKey() }),
+  ]);
+}
