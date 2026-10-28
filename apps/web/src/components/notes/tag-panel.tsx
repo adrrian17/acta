@@ -207,7 +207,8 @@ function TagTree({ nodes, active }: { nodes: TagNode[]; active: TagFilter }) {
             filter={{ tag: node.path }}
             isActive={active.tag === node.path}
             actions={
-              <div className="text-muted-foreground flex">
+              // Focus keeps them reachable by keyboard; touch screens have no hover.
+              <div className="text-muted-foreground flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">
                 <RenameTag node={node} active={active} />
                 <DeleteTag node={node} active={active} />
               </div>
