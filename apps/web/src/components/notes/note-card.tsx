@@ -14,48 +14,93 @@ import { Card, CardContent, CardFooter } from "@acta/ui/components/card";
 import { useMutation } from "@tanstack/react-query";
 import { Pin } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
-import { invalidateNotes, trpc } from "@/utils/trpc";
+import { invalidateNotes, queryClient, trpc } from "@/utils/trpc";
 
+import { ConflictDialog } from "./conflict-dialog";
 import { COPY } from "./copy";
 import { NoteEditor } from "./note-editor";
 import { NotePreview } from "./note-preview";
 
 const onSuccess = invalidateNotes;
 
+function onError(error: { message: string; data?: { code?: string } | null }) {
+  // A stale card lost a version check: show the current Note instead.
+  if (error.data?.code === "CONFLICT") {
+    void invalidateNotes();
+  }
+
+  toast.error(error.message);
+}
+
 export function NoteCard({ note }: { note: Note }) {
   const [editing, setEditing] = useState(false);
   const versioned = { id: note.id, version: note.version };
 
+  // The local edit that lost a version check, kept until Reload or Overwrite.
+  const [conflict, setConflict] = useState<string | null>(null);
+
   const update = useMutation(
     trpc.notes.update.mutationOptions({
       onSuccess: async () => {
+        setConflict(null);
         setEditing(false);
         await invalidateNotes();
+      },
+      onError: (error, variables) => {
+        if (error.data?.code === "CONFLICT") {
+          setConflict(variables.content);
+
+          return;
+        }
+
+        toast.error(error.message);
       },
     })
   );
 
+  const reload = () => {
+    setConflict(null);
+    setEditing(false);
+    void invalidateNotes();
+  };
+
+  const overwrite = async (content: string) => {
+    try {
+      const current = await queryClient.query(
+        trpc.notes.get.queryOptions({ id: note.id }, { staleTime: 0 })
+      );
+
+      update.mutate({ id: note.id, version: current.version, content });
+    } catch {
+      // The Note is gone; the query cache already reported it.
+      setConflict(null);
+    }
+  };
+
   const setPinned = useMutation(
-    trpc.notes.setPinned.mutationOptions({ onSuccess })
+    trpc.notes.setPinned.mutationOptions({ onSuccess, onError })
   );
 
   const archive = useMutation(
-    trpc.notes.archive.mutationOptions({ onSuccess })
+    trpc.notes.archive.mutationOptions({ onSuccess, onError })
   );
 
   const unarchive = useMutation(
-    trpc.notes.unarchive.mutationOptions({ onSuccess })
+    trpc.notes.unarchive.mutationOptions({ onSuccess, onError })
   );
 
-  const trash = useMutation(trpc.notes.trash.mutationOptions({ onSuccess }));
+  const trash = useMutation(
+    trpc.notes.trash.mutationOptions({ onSuccess, onError })
+  );
 
   const restore = useMutation(
-    trpc.notes.restore.mutationOptions({ onSuccess })
+    trpc.notes.restore.mutationOptions({ onSuccess, onError })
   );
 
   const deletePermanently = useMutation(
-    trpc.notes.deletePermanently.mutationOptions({ onSuccess })
+    trpc.notes.deletePermanently.mutationOptions({ onSuccess, onError })
   );
 
   const busy = [
@@ -81,6 +126,19 @@ export function NoteCard({ note }: { note: Note }) {
             }}
             onCancel={() => {
               setEditing(false);
+            }}
+          />
+          <ConflictDialog
+            open={conflict !== null}
+            pending={update.isPending}
+            onClose={() => {
+              setConflict(null);
+            }}
+            onReload={reload}
+            onOverwrite={() => {
+              if (conflict !== null) {
+                void overwrite(conflict);
+              }
             }}
           />
         </CardContent>
