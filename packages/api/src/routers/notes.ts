@@ -1,7 +1,7 @@
 import type { Database } from "@acta/db";
 import { note } from "@acta/db/schema/notes";
 import { TRPCError } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { z } from "zod";
 
@@ -14,7 +14,7 @@ import {
   trashCursor,
 } from "../notes/cursor";
 import { applyTransition, canSetPinned, NOTE_STATES } from "../notes/lifecycle";
-import type { Transition } from "../notes/lifecycle";
+import type { NoteState, Transition } from "../notes/lifecycle";
 import { toNote } from "../notes/note";
 import type { Note } from "../notes/note";
 import {
@@ -162,6 +162,26 @@ export const notesRouter = router({
       nextCursor:
         rows.length > input.limit && last ? cursorOf(last, input.view) : null,
     };
+  }),
+
+  counts: protectedProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({ state: note.state, total: count() })
+      .from(note)
+      .groupBy(note.state);
+
+    // A new NoteState fails to compile here until it gets its zero.
+    const counts: Record<NoteState, number> = {
+      timeline: 0,
+      archived: 0,
+      trashed: 0,
+    };
+
+    for (const { state, total } of rows) {
+      counts[state] = total;
+    }
+
+    return counts;
   }),
 
   get: protectedProcedure

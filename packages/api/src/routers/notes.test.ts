@@ -301,3 +301,29 @@ describe("list", () => {
     }
   });
 });
+
+describe("counts", () => {
+  it("counts Notes per state, with zero for empty states", async () => {
+    expect(await caller.notes.counts()).toEqual({
+      timeline: 0,
+      archived: 0,
+      trashed: 0,
+    });
+
+    const [a, b, c] = await Promise.all([
+      caller.notes.create({ content: "a" }),
+      caller.notes.create({ content: "b" }),
+      caller.notes.create({ content: "c" }),
+    ]);
+
+    await caller.notes.archive({ id: a.id, version: 1 });
+    await caller.notes.trash({ id: b.id, version: 1 });
+
+    expect(c.state).toBe("timeline");
+    expect(await caller.notes.counts()).toEqual({
+      timeline: 1,
+      archived: 1,
+      trashed: 1,
+    });
+  });
+});
