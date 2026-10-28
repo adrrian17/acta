@@ -1,5 +1,6 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
+import { DesktopSidebar, TopBar } from "@/components/sidebar";
 import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_auth")({
@@ -19,5 +20,13 @@ export const Route = createFileRoute("/_auth")({
 });
 
 function AuthLayout() {
-  return <Outlet />;
+  return (
+    <div className="mx-auto max-w-[60rem] lg:grid lg:grid-cols-[19.5rem_1fr]">
+      <DesktopSidebar />
+      <div className="min-w-0">
+        <TopBar />
+        <Outlet />
+      </div>
+    </div>
+  );
 }

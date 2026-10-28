@@ -15,7 +15,9 @@ import { Label } from "@acta/ui/components/label";
 import { cn } from "@acta/ui/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Hash, Pencil, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 
 import { invalidateNotes, trpc } from "@/utils/trpc";
@@ -64,8 +66,20 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="ghost" size="xs" />}>
-        {COPY.rename}
+      <AlertDialogTrigger
+        render={
+          <Button
+            variant="ghost-static"
+            size="icon-xs"
+            aria-label={`${COPY.rename} #${node.path}`}
+            title={COPY.rename}
+          />
+        }
+      >
+        <Pencil
+          aria-hidden
+          className="text-muted-foreground group-data-[active=true]:text-primary transition-colors"
+        />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -109,8 +123,20 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger render={<Button variant="ghost" size="xs" />}>
-        {COPY.delete}
+      <AlertDialogTrigger
+        render={
+          <Button
+            variant="ghost-static"
+            size="icon-xs"
+            aria-label={`${COPY.delete} #${node.path}`}
+            title={COPY.delete}
+          />
+        }
+      >
+        <Trash2
+          aria-hidden
+          className="text-muted-foreground group-data-[active=true]:text-primary transition-colors"
+        />
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -135,31 +161,42 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
   );
 }
 
-function FilterLink({
+function FilterRow({
   label,
-  count,
   filter,
   isActive,
+  actions,
 }: {
   label: string;
-  count: number;
   filter: TagFilter;
   isActive: boolean;
+  actions?: ReactNode;
 }) {
   return (
-    <Link
-      to="/"
-      // Clicking the active filter again clears it.
-      search={isActive ? {} : filter}
-      aria-current={isActive ? "true" : undefined}
+    <div
       className={cn(
-        "flex min-w-0 flex-1 items-center justify-between gap-2 rounded px-1 hover:underline",
-        isActive && "bg-muted font-medium"
+        // A border, not a ring: the scrolling sidebar clips anything drawn outside the box.
+        "group hover:bg-muted flex items-center gap-1 rounded-md border border-transparent pr-1 transition-colors",
+        isActive && "bg-accent hover:bg-accent border-primary/60"
       )}
+      data-active={isActive}
     >
-      <span className="truncate">{label}</span>
-      <span className="text-muted-foreground text-xs">{count}</span>
-    </Link>
+      <Link
+        to="/"
+        // Clicking the active filter again clears it.
+        search={isActive ? {} : filter}
+        aria-current={isActive ? "true" : undefined}
+        className={cn(
+          "text-muted-foreground group-hover:text-foreground flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+          isActive &&
+            "text-accent-foreground group-hover:text-accent-foreground font-medium"
+        )}
+      >
+        <Hash aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
+        <span className="flex-1 truncate">{label}</span>
+      </Link>
+      {actions}
+    </div>
   );
 }
 
@@ -167,17 +204,19 @@ function TagTree({ nodes, active }: { nodes: TagNode[]; active: TagFilter }) {
   return (
     <ul className="grid gap-1">
       {nodes.map((node) => (
-        <li key={node.path}>
-          <div className="group flex items-center gap-1">
-            <FilterLink
-              label={`#${node.name}`}
-              count={node.count}
-              filter={{ tag: node.path }}
-              isActive={active.tag === node.path}
-            />
-            <RenameTag node={node} active={active} />
-            <DeleteTag node={node} active={active} />
-          </div>
+        <li key={node.path} className="grid gap-1">
+          <FilterRow
+            label={node.name}
+            filter={{ tag: node.path }}
+            isActive={active.tag === node.path}
+            actions={
+              // Focus keeps them reachable by keyboard; touch screens have no hover.
+              <div className="text-muted-foreground flex opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">
+                <RenameTag node={node} active={active} />
+                <DeleteTag node={node} active={active} />
+              </div>
+            }
+          />
           {node.children.length > 0 && (
             <div className="ml-3 border-l pl-2">
               <TagTree nodes={node.children} active={active} />
@@ -195,18 +234,25 @@ export function TagPanel({ active }: { active: TagFilter }) {
   return (
     <nav
       aria-label={COPY.tagsTitle}
-      className="grid content-start gap-2 text-sm"
+      className="grid content-start gap-1 text-sm"
     >
-      <h2 className="font-semibold">{COPY.tagsTitle}</h2>
+      <h2 className="text-muted-foreground px-1 pb-1 text-xs">
+        {COPY.tagsTitle}
+      </h2>
       {tree.data && (
         <>
-          <TagTree nodes={tree.data.nodes} active={active} />
-          <FilterLink
+          <FilterRow
             label={COPY.untagged}
-            count={tree.data.untaggedCount}
             filter={{ untagged: true }}
             isActive={active.untagged === true}
           />
+          {tree.data.nodes.length === 0 ? (
+            <p className="text-muted-foreground px-1 pt-1 text-xs">
+              {COPY.noTags}
+            </p>
+          ) : (
+            <TagTree nodes={tree.data.nodes} active={active} />
+          )}
         </>
       )}
     </nav>

@@ -7,12 +7,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@acta/ui/components/alert-dialog";
 import { Button } from "@acta/ui/components/button";
-import { Card, CardContent, CardFooter } from "@acta/ui/components/card";
+import { Card, CardContent } from "@acta/ui/components/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@acta/ui/components/dropdown-menu";
 import { useMutation } from "@tanstack/react-query";
-import { Pin } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Ellipsis, Pin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -22,6 +28,8 @@ import { ConflictDialog } from "./conflict-dialog";
 import { COPY } from "./copy";
 import { NoteEditor } from "./note-editor";
 import { NotePreview } from "./note-preview";
+import { relativeTime } from "./relative-time";
+import { useNow } from "./use-now";
 
 const onSuccess = invalidateNotes;
 
@@ -44,6 +52,8 @@ function onError(error: { message: string; data?: { code?: string } | null }) {
 
 export function NoteCard({ note }: { note: Note }) {
   const [editing, setEditing] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const now = useNow();
   const versioned = { id: note.id, version: note.version };
 
   // The local edit that lost a version check, kept until Reload or Overwrite.
@@ -124,156 +134,179 @@ export function NoteCard({ note }: { note: Note }) {
 
   if (editing) {
     return (
-      <Card>
-        <CardContent>
-          <NoteEditor
-            label={COPY.editorLabel}
-            initialContent={note.content}
-            saving={update.isPending}
-            onSave={(content) => {
-              update.mutate({ ...versioned, content });
-            }}
-            onCancel={() => {
-              setEditing(false);
-            }}
-          />
-          <ConflictDialog
-            open={conflict !== null}
-            pending={update.isPending}
-            onClose={() => {
-              setConflict(null);
-            }}
-            onReload={reload}
-            onOverwrite={() => {
-              if (conflict !== null) {
-                void overwrite(conflict);
-              }
-            }}
-          />
-        </CardContent>
-      </Card>
+      <div className="bg-card focus-within:border-ring/60 rounded-xl border transition-colors">
+        <NoteEditor
+          label={COPY.editorLabel}
+          initialContent={note.content}
+          saving={update.isPending}
+          onSave={(content) => {
+            update.mutate({ ...versioned, content });
+          }}
+          onCancel={() => {
+            setEditing(false);
+          }}
+        />
+        <ConflictDialog
+          open={conflict !== null}
+          pending={update.isPending}
+          onClose={() => {
+            setConflict(null);
+          }}
+          onReload={reload}
+          onOverwrite={() => {
+            if (conflict !== null) {
+              void overwrite(conflict);
+            }
+          }}
+        />
+      </div>
     );
   }
 
   return (
     <Card>
-      <CardContent className="relative">
-        {note.pinned && (
-          <Pin
-            aria-label={COPY.pinned}
-            className="text-muted-foreground absolute top-0 right-4 size-4"
-          />
-        )}
-        <NotePreview content={note.content} />
-        {note.purgeAt !== null && (
-          <p className="text-muted-foreground mt-2 text-xs">
-            {COPY.purgeAt(new Date(note.purgeAt).toLocaleDateString())}
-          </p>
-        )}
-      </CardContent>
-      <CardFooter>
-        <div className="flex flex-wrap gap-1">
-          {note.state === "timeline" && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => {
-                  setEditing(true);
-                }}
-              >
-                {COPY.edit}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => {
-                  setPinned.mutate({ ...versioned, pinned: !note.pinned });
-                }}
-              >
-                {note.pinned ? COPY.unpin : COPY.pin}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => {
-                  archive.mutate(versioned);
-                }}
-              >
-                {COPY.archive}
-              </Button>
-            </>
-          )}
-          {note.state === "archived" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={() => {
-                unarchive.mutate(versioned);
-              }}
+      <CardContent>
+        <div className="grid gap-3">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
+            <time
+              dateTime={new Date(note.createdAt).toISOString()}
+              title={new Date(note.createdAt).toLocaleString()}
             >
-              {COPY.unarchive}
-            </Button>
-          )}
-          {note.state === "trashed" ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => {
-                  restore.mutate(versioned);
-                }}
+              {relativeTime(note.createdAt, now)}
+            </time>
+            {note.pinned && (
+              <Pin aria-label={COPY.pinned} className="size-3.5" />
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    className="ml-auto"
+                    aria-label={COPY.noteActions}
+                  />
+                }
               >
-                {COPY.restore}
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger
-                  render={
-                    <Button variant="destructive" size="sm" disabled={busy} />
-                  }
-                >
-                  {COPY.deletePermanently}
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      {COPY.deletePermanentlyConfirm}
-                    </AlertDialogTitle>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{COPY.cancel}</AlertDialogCancel>
-                    <AlertDialogAction
-                      variant="destructive"
-                      disabled={deletePermanently.isPending}
+                <Ellipsis aria-hidden />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {note.state === "timeline" && (
+                  <>
+                    <DropdownMenuItem
+                      disabled={busy}
                       onClick={() => {
-                        deletePermanently.mutate({ id: note.id });
+                        setEditing(true);
+                      }}
+                    >
+                      {COPY.edit}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={busy}
+                      onClick={() => {
+                        setPinned.mutate({
+                          ...versioned,
+                          pinned: !note.pinned,
+                        });
+                      }}
+                    >
+                      {note.pinned ? COPY.unpin : COPY.pin}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={busy}
+                      onClick={() => {
+                        archive.mutate(versioned);
+                      }}
+                    >
+                      {COPY.archive}
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {note.state === "archived" && (
+                  <DropdownMenuItem
+                    disabled={busy}
+                    onClick={() => {
+                      unarchive.mutate(versioned);
+                    }}
+                  >
+                    {COPY.unarchive}
+                  </DropdownMenuItem>
+                )}
+                {note.state === "trashed" ? (
+                  <>
+                    <DropdownMenuItem
+                      disabled={busy}
+                      onClick={() => {
+                        restore.mutate(versioned);
+                      }}
+                    >
+                      {COPY.restore}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      disabled={busy}
+                      onClick={() => {
+                        setConfirmingDelete(true);
                       }}
                     >
                       {COPY.deletePermanently}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={busy}
-              onClick={() => {
-                trash.mutate(versioned);
-              }}
-            >
-              {COPY.trash}
-            </Button>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem
+                    disabled={busy}
+                    onClick={() => {
+                      trash.mutate(versioned);
+                    }}
+                  >
+                    {COPY.trash}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <NotePreview content={note.content} />
+          {note.purgeAt !== null && (
+            <p className="text-muted-foreground text-xs">
+              {COPY.purgeAt(new Date(note.purgeAt).toLocaleDateString())}
+            </p>
+          )}
+          {note.tags.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5">
+              {note.tags.map((tag) => (
+                <li key={tag}>
+                  <Link
+                    to="/"
+                    search={{ tag }}
+                    className="bg-accent text-accent-foreground hover:bg-accent/70 rounded-full px-2 py-0.5 text-xs"
+                  >
+                    #{tag}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
-      </CardFooter>
+      </CardContent>
+      <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{COPY.deletePermanentlyConfirm}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{COPY.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={deletePermanently.isPending}
+              onClick={() => {
+                deletePermanently.mutate({ id: note.id });
+              }}
+            >
+              {COPY.deletePermanently}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

@@ -1,15 +1,11 @@
 import { Button } from "@acta/ui/components/button";
 import { Label } from "@acta/ui/components/label";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@acta/ui/components/tabs";
 import { Textarea } from "@acta/ui/components/textarea";
-import { useId, useState } from "react";
+import { Eye, Hash, List, Save } from "lucide-react";
+import { useId, useRef, useState } from "react";
 
 import { COPY } from "./copy";
+import { insertText } from "./insert-text";
 import { NotePreview } from "./note-preview";
 
 // Mirrors the server's content rules (NOTE_MAX_CHARS in @acta/api) so Save can explain itself.
@@ -57,11 +53,38 @@ export function NoteEditor({
   onCancel,
 }: NoteEditorProps) {
   const [content, setContent] = useState(initialContent);
+  const [previewing, setPreviewing] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaId = useId();
   const errorId = useId();
   const error = contentError(content);
 
   const message = errorMessage(error, content, initialContent);
+
+  // Edits to an existing note keep Save and Cancel; the composer sends.
+  const composing = onCancel === undefined;
+
+  const insert = (text: string, atLineStart: boolean) => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const next = insertText(
+      content,
+      { start: textarea.selectionStart, end: textarea.selectionEnd },
+      text,
+      atLineStart
+    );
+
+    setContent(next.value);
+    textarea.focus();
+    // Re-rendering the controlled value moves the caret to the end, so restore it afterwards.
+    requestAnimationFrame(() => {
+      textarea.setSelectionRange(next.caret, next.caret);
+    });
+  };
 
   const save = () => {
     if (!saving && error === null) {
@@ -71,59 +94,113 @@ export function NoteEditor({
 
   return (
     <form
-      className="grid gap-2"
+      className="grid"
       onSubmit={(event) => {
         event.preventDefault();
         save();
       }}
     >
-      <Tabs defaultValue="write">
-        <TabsList>
-          <TabsTrigger value="write">{COPY.write}</TabsTrigger>
-          <TabsTrigger value="preview">{COPY.preview}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="write">
-          <Label htmlFor={textareaId} className="sr-only">
-            {label}
-          </Label>
-          <Textarea
-            id={textareaId}
-            value={content}
-            placeholder={COPY.composerPlaceholder}
-            aria-invalid={message !== null}
-            aria-describedby={message === null ? undefined : errorId}
-            className="min-h-24"
-            onChange={(event) => {
-              setContent(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                event.preventDefault();
-                save();
-              }
-            }}
-          />
-        </TabsContent>
-        <TabsContent value="preview">
-          <div className="min-h-24 rounded-md border p-3">
+      <div className="px-4 pt-3">
+        {previewing ? (
+          <div className="min-h-28 py-2">
             <NotePreview content={content} />
           </div>
-        </TabsContent>
-      </Tabs>
-      {message !== null && (
-        <p id={errorId} role="alert" className="text-destructive text-sm">
-          {message}
-        </p>
-      )}
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            {COPY.cancel}
-          </Button>
+        ) : (
+          <>
+            <Label htmlFor={textareaId} className="sr-only">
+              {label}
+            </Label>
+            <Textarea
+              id={textareaId}
+              ref={textareaRef}
+              value={content}
+              placeholder={COPY.composerPlaceholder}
+              aria-invalid={message !== null}
+              aria-describedby={message === null ? undefined : errorId}
+              variant="bare"
+              className="min-h-28 resize-none"
+              onChange={(event) => {
+                setContent(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                  event.preventDefault();
+                  save();
+                }
+              }}
+            />
+          </>
         )}
-        <Button type="submit" disabled={saving || error !== null}>
-          {COPY.save}
-        </Button>
+        {message !== null && (
+          <p
+            id={errorId}
+            role="alert"
+            className="text-destructive pb-1 text-sm"
+          >
+            {message}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-2 px-3 pb-3">
+        <div className="text-muted-foreground flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={COPY.insertTag}
+            disabled={previewing}
+            onClick={() => {
+              insert("#", false);
+            }}
+          >
+            <Hash aria-hidden />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={COPY.insertList}
+            disabled={previewing}
+            onClick={() => {
+              insert("- ", true);
+            }}
+          >
+            <List aria-hidden />
+          </Button>
+          <span aria-hidden className="bg-border mx-1 h-4 w-px" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={COPY.preview}
+            aria-pressed={previewing}
+            onClick={() => {
+              setPreviewing((shown) => !shown);
+            }}
+          >
+            <Eye aria-hidden />
+          </Button>
+        </div>
+        {composing ? (
+          <Button
+            type="submit"
+            size="icon-sm"
+            aria-label={COPY.send}
+            title={COPY.send}
+            disabled={saving || error !== null}
+          >
+            <Save aria-hidden />
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              {COPY.cancel}
+            </Button>
+            <Button type="submit" size="sm" disabled={saving || error !== null}>
+              {COPY.save}
+            </Button>
+          </div>
+        )}
       </div>
     </form>
   );
