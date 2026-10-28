@@ -1,7 +1,7 @@
 import type { Database } from "@acta/db";
-import { note, noteTag } from "@acta/db/schema/notes";
+import { note } from "@acta/db/schema/notes";
 import { TRPCError } from "@trpc/server";
-import { and, eq, exists, gte, lt, notExists, or, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { z } from "zod";
 
@@ -23,6 +23,8 @@ import {
   lostWriteError,
   noteNotFound,
   readNote,
+  taggedWith,
+  untagged,
   writeNote,
 } from "../notes/store";
 import { extractTags, isValidTag, normalizeTag } from "../notes/tags";
@@ -85,33 +87,6 @@ function afterCursor(input: ListInput, table: typeof note): SQL | undefined {
   }
 
   return sql`(${table.pinned}, ${table.createdAt}, ${table.id}) < (${key.pinned ? 1 : 0}, ${key.createdAt}, ${key.id})`;
-}
-
-/** Notes tagged `tag` or one of its descendants; a range instead of LIKE, since `_` is a Tag character. */
-function taggedWith(db: Database, table: typeof note, tag: string): SQL {
-  return exists(
-    db
-      .select({ noteId: noteTag.noteId })
-      .from(noteTag)
-      .where(
-        and(
-          eq(noteTag.noteId, table.id),
-          or(
-            eq(noteTag.tag, tag),
-            and(gte(noteTag.tag, `${tag}/`), lt(noteTag.tag, `${tag}0`))
-          )
-        )
-      )
-  );
-}
-
-function untagged(db: Database, table: typeof note): SQL {
-  return notExists(
-    db
-      .select({ noteId: noteTag.noteId })
-      .from(noteTag)
-      .where(eq(noteTag.noteId, table.id))
-  );
 }
 
 function cursorOf(item: Note, view: ListInput["view"]): string {

@@ -1,7 +1,8 @@
 import type { Database } from "@acta/db";
 import { note, noteTag } from "@acta/db/schema/notes";
 import { TRPCError } from "@trpc/server";
-import { and, eq, exists, sql } from "drizzle-orm";
+import { and, eq, exists, gte, lt, notExists, or, sql } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 
 import { chunk, D1_MAX_PARAMS } from "./chunk";
 import type { LifecycleFields } from "./lifecycle";
@@ -119,4 +120,31 @@ export async function lostWriteError(
         message: "This note changed on another device.",
       })
     : noteNotFound();
+}
+
+/** Notes tagged `tag` or one of its descendants; a range instead of LIKE, since `_` is a Tag character. */
+export function taggedWith(db: Database, table: typeof note, tag: string): SQL {
+  return exists(
+    db
+      .select({ noteId: noteTag.noteId })
+      .from(noteTag)
+      .where(
+        and(
+          eq(noteTag.noteId, table.id),
+          or(
+            eq(noteTag.tag, tag),
+            and(gte(noteTag.tag, `${tag}/`), lt(noteTag.tag, `${tag}0`))
+          )
+        )
+      )
+  );
+}
+
+export function untagged(db: Database, table: typeof note): SQL {
+  return notExists(
+    db
+      .select({ noteId: noteTag.noteId })
+      .from(noteTag)
+      .where(eq(noteTag.noteId, table.id))
+  );
 }
