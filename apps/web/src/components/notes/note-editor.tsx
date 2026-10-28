@@ -7,7 +7,8 @@ import {
   TabsTrigger,
 } from "@acta/ui/components/tabs";
 import { Textarea } from "@acta/ui/components/textarea";
-import { useId, useState } from "react";
+import { Hash, List, SendHorizontal } from "lucide-react";
+import { useId, useRef, useState } from "react";
 
 import { COPY } from "./copy";
 import { NotePreview } from "./note-preview";
@@ -41,6 +42,28 @@ function errorMessage(
   return null;
 }
 
+/** Inserts `text` at the selection, or at the start of the caret's line when `atLineStart`. */
+function insertText(
+  value: string,
+  selection: { start: number; end: number },
+  text: string,
+  atLineStart: boolean
+) {
+  if (atLineStart) {
+    const lineStart = value.lastIndexOf("\n", selection.start - 1) + 1;
+
+    return {
+      value: value.slice(0, lineStart) + text + value.slice(lineStart),
+      caret: selection.end + text.length,
+    };
+  }
+
+  return {
+    value: value.slice(0, selection.start) + text + value.slice(selection.end),
+    caret: selection.start + text.length,
+  };
+}
+
 interface NoteEditorProps {
   label: string;
   initialContent?: string;
@@ -57,11 +80,38 @@ export function NoteEditor({
   onCancel,
 }: NoteEditorProps) {
   const [content, setContent] = useState(initialContent);
+  const [tab, setTab] = useState("write");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaId = useId();
   const errorId = useId();
   const error = contentError(content);
 
   const message = errorMessage(error, content, initialContent);
+
+  // Edits to an existing note keep Save and Cancel; the composer sends.
+  const composing = onCancel === undefined;
+
+  const insert = (text: string, atLineStart: boolean) => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    const next = insertText(
+      content,
+      { start: textarea.selectionStart, end: textarea.selectionEnd },
+      text,
+      atLineStart
+    );
+
+    setContent(next.value);
+    textarea.focus();
+    // Re-rendering the controlled value moves the caret to the end, so restore it afterwards.
+    requestAnimationFrame(() => {
+      textarea.setSelectionRange(next.caret, next.caret);
+    });
+  };
 
   const save = () => {
     if (!saving && error === null) {
@@ -77,7 +127,7 @@ export function NoteEditor({
         save();
       }}
     >
-      <Tabs defaultValue="write">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="write">{COPY.write}</TabsTrigger>
           <TabsTrigger value="preview">{COPY.preview}</TabsTrigger>
@@ -88,11 +138,13 @@ export function NoteEditor({
           </Label>
           <Textarea
             id={textareaId}
+            ref={textareaRef}
             value={content}
             placeholder={COPY.composerPlaceholder}
             aria-invalid={message !== null}
             aria-describedby={message === null ? undefined : errorId}
-            className="min-h-24"
+            variant="bare"
+            className="min-h-24 resize-none"
             onChange={(event) => {
               setContent(event.target.value);
             }}
@@ -105,7 +157,7 @@ export function NoteEditor({
           />
         </TabsContent>
         <TabsContent value="preview">
-          <div className="min-h-24 rounded-md border p-3">
+          <div className="min-h-24 px-1 py-2">
             <NotePreview content={content} />
           </div>
         </TabsContent>
@@ -115,15 +167,46 @@ export function NoteEditor({
           {message}
         </p>
       )}
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <Button type="button" variant="ghost" onClick={onCancel}>
-            {COPY.cancel}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={COPY.insertTag}
+            disabled={tab !== "write"}
+            onClick={() => {
+              insert("#", false);
+            }}
+          >
+            <Hash aria-hidden />
           </Button>
-        )}
-        <Button type="submit" disabled={saving || error !== null}>
-          {COPY.save}
-        </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={COPY.insertList}
+            disabled={tab !== "write"}
+            onClick={() => {
+              insert("- ", true);
+            }}
+          >
+            <List aria-hidden />
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          {onCancel && (
+            <Button type="button" variant="ghost" onClick={onCancel}>
+              {COPY.cancel}
+            </Button>
+          )}
+          <Button type="submit" size="pill" disabled={saving || error !== null}>
+            {composing && (
+              <SendHorizontal aria-hidden data-icon="inline-start" />
+            )}
+            {composing ? COPY.send : COPY.save}
+          </Button>
+        </div>
       </div>
     </form>
   );
