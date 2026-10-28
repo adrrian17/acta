@@ -70,7 +70,9 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {COPY.renameConfirm(node.path, target, node.count)}
+            {target === ""
+              ? `${COPY.rename} #${node.path}`
+              : COPY.renameConfirm(node.path, target, node.count)}
           </AlertDialogTitle>
         </AlertDialogHeader>
         <div className="grid gap-2">
