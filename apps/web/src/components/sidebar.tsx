@@ -48,7 +48,7 @@ function SidebarContent() {
           <Link
             key={to}
             to={to}
-            activeOptions={{ exact: true }}
+            activeOptions={{ exact: true, includeSearch: false }}
             className="text-muted-foreground hover:bg-accent/60 data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:before:bg-primary relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm before:absolute before:inset-y-1.5 before:left-0 before:w-0.5 before:rounded-full data-[status=active]:font-medium"
           >
             <Icon aria-hidden className="size-4" />
