@@ -52,7 +52,7 @@ function SidebarContent() {
             key={to}
             to={to}
             activeOptions={{ exact: true, includeSearch: false }}
-            className="text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:before:bg-primary relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:rounded-full"
+            className="text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:border-primary/60 relative flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm"
           >
             <Icon aria-hidden className="size-5" strokeWidth={1.75} />
             <span className="flex-1">{label}</span>
