@@ -1,5 +1,6 @@
 import { purgeTrashedNotes } from "@acta/api/notes/purge";
 import { appRouter } from "@acta/api/routers/index";
+import { purgeTrashedTasks } from "@acta/api/tasks/purge";
 import { trpcServer } from "@hono/trpc-server";
 import { initLogger } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
@@ -60,10 +61,12 @@ app.get("/", (c) => c.text("OK"));
 
 export default {
   fetch: app.fetch,
-  // Daily Cron Trigger (see alchemy.run.ts) that purges Notes trashed 30+ days ago.
+  // Daily Cron Trigger (see alchemy.run.ts) that purges Notes and Tasks trashed 30+ days ago.
   scheduled(controller, _env, ctx) {
+    const db = getDb();
+    const now = new Date(controller.scheduledTime);
     ctx.waitUntil(
-      purgeTrashedNotes(getDb(), new Date(controller.scheduledTime))
+      Promise.all([purgeTrashedNotes(db, now), purgeTrashedTasks(db, now)])
     );
   },
 } satisfies ExportedHandler;
