@@ -116,10 +116,16 @@ describe("create and update", () => {
     await expect(caller.tasks.markDone(edit)).rejects.toMatchObject({
       code: "CONFLICT",
     });
-    expect(await listAll(caller, "open")).toEqual(["b"]);
+    expect(await caller.tasks.get({ id: task.id })).toMatchObject({
+      title: "b",
+      version: 2,
+    });
   });
 
   it("returns NOT_FOUND for a Task that does not exist", async () => {
+    await expect(caller.tasks.get({ id: "missing" })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
     await expect(
       caller.tasks.update({
         id: "missing",

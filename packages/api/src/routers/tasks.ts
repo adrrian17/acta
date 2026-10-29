@@ -183,6 +183,16 @@ export const tasksRouter = router({
     };
   }),
 
+  get: protectedProcedure.input(taskId).query(async ({ ctx, input }) => {
+    const row = await readTask(ctx.db, input.id);
+
+    if (!row) {
+      throw taskNotFound();
+    }
+
+    return toTask(row);
+  }),
+
   create: protectedProcedure
     .input(z.object({ title: taskTitle, dueDate: taskDueDate.optional() }))
     .mutation(async ({ ctx, input }) => {
