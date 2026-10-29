@@ -9,24 +9,28 @@ import {
 } from "@acta/ui/components/sheet";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouterState, useSearch } from "@tanstack/react-router";
-import { Archive, Feather, Inbox, Menu, Trash2 } from "lucide-react";
+import type { LinkProps } from "@tanstack/react-router";
+import { Archive, Feather, Inbox, ListTodo, Menu, Trash2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import { COPY } from "@/components/notes/copy";
 import { TagPanel } from "@/components/notes/tag-panel";
+import { TASK_COPY } from "@/components/tasks/copy";
 import UserMenu from "@/components/user-menu";
 import { trpc } from "@/utils/trpc";
 
 const NAV_ITEMS: readonly {
-  to: "/" | "/archive" | "/trash";
+  to: LinkProps["to"];
   label: string;
   icon: LucideIcon;
-  state: NoteState;
+  /** The Note view whose count the entry shows; Tasks show none. */
+  state?: NoteState;
 }[] = [
   { to: "/", label: COPY.navTimeline, icon: Inbox, state: "timeline" },
   { to: "/archive", label: COPY.navArchive, icon: Archive, state: "archived" },
   { to: "/trash", label: COPY.navTrash, icon: Trash2, state: "trashed" },
+  { to: "/tasks", label: TASK_COPY.navTasks, icon: ListTodo },
 ];
 
 function SidebarContent() {
@@ -52,7 +56,7 @@ function SidebarContent() {
             <Icon aria-hidden className="size-5" strokeWidth={1.75} />
             <span className="flex-1">{label}</span>
             <span className="text-muted-foreground group-data-[status=active]:text-primary text-xs tabular-nums transition-colors">
-              {counts.data?.[state]}
+              {state && counts.data?.[state]}
             </span>
           </Link>
         ))}

@@ -12,6 +12,8 @@ import { COPY } from "./copy";
 
 interface ConflictDialogProps {
   open: boolean;
+  /** Defaults to the Note copy; Tasks pass their own. */
+  title?: string;
   pending: boolean;
   /** Closing without a choice keeps the local edit open. */
   onClose: () => void;
@@ -21,6 +23,7 @@ interface ConflictDialogProps {
 
 export function ConflictDialog({
   open,
+  title = COPY.conflictTitle,
   pending,
   onClose,
   onReload,
@@ -37,7 +40,7 @@ export function ConflictDialog({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{COPY.conflictTitle}</AlertDialogTitle>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onReload}>
