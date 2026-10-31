@@ -52,6 +52,7 @@ jobs:
       pull-requests: read
     env:
       ALCHEMY_STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'live_adrrian17' }}
+      OP_VAULT_NAME: ${{ github.event_name == 'pull_request' && 'acta-preview' || 'acta-production' }}
     steps:
       - id: fresh
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -104,32 +105,24 @@ jobs:
       - if: steps.fresh_again.outputs.current == 'true'
         working-directory: packages/infra
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm exec alchemy provider check-env --provider Cloudflare
+          OP_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          NODE_ENV: production
+        run: >-
+          pnpm exec varlock run --inject vars --filter CLOUDFLARE_API_TOKEN,CLOUDFLARE_ACCOUNT_ID -- pnpm exec alchemy provider check-env --provider Cloudflare
       - if: steps.fresh_again.outputs.current == 'true' && !(github.event_name == 'pull_request' && github.event.action == 'closed')
         working-directory: packages/infra
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           NODE_ENV: production
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
-          OWNER_GITHUB_ID: ${{ secrets.OWNER_GITHUB_ID }}
-          GITHUB_CLIENT_ID: ${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+          OP_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: pnpm run deploy --yes
       - if: steps.fresh_again.outputs.current == 'true' && github.event_name == 'pull_request' && github.event.action == 'closed'
         working-directory: packages/infra
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           NODE_ENV: production
-          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
-          OWNER_GITHUB_ID: ${{ secrets.OWNER_GITHUB_ID }}
-          GITHUB_CLIENT_ID: ${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+          OP_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
