@@ -7,12 +7,21 @@ import {
   notesRelations,
   noteTag,
   session,
+  task,
   user,
   verification,
 } from "./schema";
 
 export const relations = {
-  ...defineRelations({ account, note, noteTag, session, user, verification }),
+  ...defineRelations({
+    account,
+    note,
+    noteTag,
+    session,
+    task,
+    user,
+    verification,
+  }),
   ...authRelations,
   ...notesRelations,
 };

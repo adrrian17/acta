@@ -79,3 +79,8 @@ export async function invalidateNotes() {
     queryClient.invalidateQueries({ queryKey: trpc.tags.pathKey() }),
   ]);
 }
+
+/** Refetches every Task view after a write. */
+export async function invalidateTasks() {
+  await queryClient.invalidateQueries({ queryKey: trpc.tasks.pathKey() });
+}
