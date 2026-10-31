@@ -31,8 +31,6 @@ import { dueStatus, formatDay, localDay } from "./due-date";
 import { TaskForm } from "./task-form";
 import type { TaskFields } from "./task-form";
 
-const onSuccess = invalidateTasks;
-
 // The row is out of date: the Task changed, is gone, or is no longer in that state.
 const STALE_TASK_CODES = new Set([
   "CONFLICT",
@@ -119,24 +117,35 @@ export function TaskRow({ task }: { task: Task }) {
     }
   };
 
+  // The row slides out first and the list refetches when that ends, so it never just vanishes.
+  const [leaving, setLeaving] = useState(false);
+
+  const leave = async () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      await invalidateTasks();
+    } else {
+      setLeaving(true);
+    }
+  };
+
   const markDone = useMutation(
-    trpc.tasks.markDone.mutationOptions({ onSuccess, onError })
+    trpc.tasks.markDone.mutationOptions({ onSuccess: leave, onError })
   );
 
   const reopen = useMutation(
-    trpc.tasks.reopen.mutationOptions({ onSuccess, onError })
+    trpc.tasks.reopen.mutationOptions({ onSuccess: leave, onError })
   );
 
   const trash = useMutation(
-    trpc.tasks.trash.mutationOptions({ onSuccess, onError })
+    trpc.tasks.trash.mutationOptions({ onSuccess: leave, onError })
   );
 
   const restore = useMutation(
-    trpc.tasks.restore.mutationOptions({ onSuccess, onError })
+    trpc.tasks.restore.mutationOptions({ onSuccess: leave, onError })
   );
 
   const deletePermanently = useMutation(
-    trpc.tasks.deletePermanently.mutationOptions({ onSuccess, onError })
+    trpc.tasks.deletePermanently.mutationOptions({ onSuccess: leave, onError })
   );
 
   const busy = [
@@ -181,124 +190,145 @@ export function TaskRow({ task }: { task: Task }) {
   }
 
   return (
-    <div className="bg-card flex min-h-12 items-start gap-3 rounded-xl border px-3 py-2">
-      {task.state !== "trashed" && (
-        <div className="flex h-8 items-center">
-          <Checkbox
-            checked={task.state === "done"}
-            disabled={busy}
-            aria-label={
-              task.state === "done" ? TASK_COPY.reopen : TASK_COPY.markDone
-            }
-            onCheckedChange={(checked) => {
-              if (checked) {
-                markDone.mutate(versioned);
-              } else {
-                reopen.mutate(versioned);
-              }
-            }}
-          />
-        </div>
+    <div
+      className={cn(
+        "grid grid-rows-[1fr] transition-all duration-300 ease-out",
+        leaving && "pointer-events-none grid-rows-[0fr] opacity-0"
       )}
-      <p
-        className={cn(
-          "min-w-0 flex-1 py-1.5 text-sm break-words",
-          task.state === "done" && "text-muted-foreground line-through"
-        )}
-      >
-        {task.title}
-      </p>
-      <div className="flex h-8 shrink-0 items-center">
-        {task.state === "open" && task.dueDate !== null && (
-          <DueLabel dueDate={task.dueDate} />
-        )}
-        {task.state === "done" && task.doneAt !== null && (
-          <span className="text-muted-foreground shrink-0 text-xs">
-            {TASK_COPY.doneAt(new Date(task.doneAt).toLocaleDateString())}
-          </span>
-        )}
-        {task.purgeAt !== null && (
-          <span className="text-muted-foreground shrink-0 text-xs">
-            {TASK_COPY.purgeAt(new Date(task.purgeAt).toLocaleDateString())}
-          </span>
-        )}
+      onTransitionEnd={(event) => {
+        if (
+          leaving &&
+          event.target === event.currentTarget &&
+          event.propertyName === "grid-template-rows"
+        ) {
+          void invalidateTasks();
+        }
+      }}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <div className="bg-card flex min-h-12 items-start gap-3 rounded-xl border px-3 py-2">
+          {task.state !== "trashed" && (
+            <div className="flex h-8 items-center">
+              <Checkbox
+                checked={task.state === "done"}
+                disabled={busy}
+                aria-label={
+                  task.state === "done" ? TASK_COPY.reopen : TASK_COPY.markDone
+                }
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    markDone.mutate(versioned);
+                  } else {
+                    reopen.mutate(versioned);
+                  }
+                }}
+              />
+            </div>
+          )}
+          <p
+            className={cn(
+              "min-w-0 flex-1 py-1.5 text-sm break-words",
+              task.state === "done" && "text-muted-foreground line-through"
+            )}
+          >
+            {task.title}
+          </p>
+          <div className="flex h-8 shrink-0 items-center">
+            {task.state === "open" && task.dueDate !== null && (
+              <DueLabel dueDate={task.dueDate} />
+            )}
+            {task.state === "done" && task.doneAt !== null && (
+              <span className="text-muted-foreground shrink-0 text-xs">
+                {TASK_COPY.doneAt(new Date(task.doneAt).toLocaleDateString())}
+              </span>
+            )}
+            {task.purgeAt !== null && (
+              <span className="text-muted-foreground shrink-0 text-xs">
+                {TASK_COPY.purgeAt(new Date(task.purgeAt).toLocaleDateString())}
+              </span>
+            )}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={TASK_COPY.actions}
+                />
+              }
+            >
+              <Ellipsis aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {task.state === "open" && (
+                <DropdownMenuItem
+                  disabled={busy}
+                  onClick={() => {
+                    setEditing(true);
+                  }}
+                >
+                  {TASK_COPY.edit}
+                </DropdownMenuItem>
+              )}
+              {task.state === "trashed" ? (
+                <>
+                  <DropdownMenuItem
+                    disabled={busy}
+                    onClick={() => {
+                      restore.mutate(versioned);
+                    }}
+                  >
+                    {TASK_COPY.restore}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    disabled={busy}
+                    onClick={() => {
+                      setConfirmingDelete(true);
+                    }}
+                  >
+                    {TASK_COPY.deletePermanently}
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem
+                  disabled={busy}
+                  onClick={() => {
+                    trash.mutate(versioned);
+                  }}
+                >
+                  {TASK_COPY.trash}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <AlertDialog
+            open={confirmingDelete}
+            onOpenChange={setConfirmingDelete}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {TASK_COPY.deletePermanentlyConfirm}
+                </AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{TASK_COPY.cancel}</AlertDialogCancel>
+                <AlertDialogAction
+                  variant="destructive"
+                  disabled={deletePermanently.isPending}
+                  onClick={() => {
+                    deletePermanently.mutate({ id: task.id });
+                  }}
+                >
+                  {TASK_COPY.deletePermanently}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={TASK_COPY.actions}
-            />
-          }
-        >
-          <Ellipsis aria-hidden />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {task.state === "open" && (
-            <DropdownMenuItem
-              disabled={busy}
-              onClick={() => {
-                setEditing(true);
-              }}
-            >
-              {TASK_COPY.edit}
-            </DropdownMenuItem>
-          )}
-          {task.state === "trashed" ? (
-            <>
-              <DropdownMenuItem
-                disabled={busy}
-                onClick={() => {
-                  restore.mutate(versioned);
-                }}
-              >
-                {TASK_COPY.restore}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={busy}
-                onClick={() => {
-                  setConfirmingDelete(true);
-                }}
-              >
-                {TASK_COPY.deletePermanently}
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <DropdownMenuItem
-              disabled={busy}
-              onClick={() => {
-                trash.mutate(versioned);
-              }}
-            >
-              {TASK_COPY.trash}
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {TASK_COPY.deletePermanentlyConfirm}
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{TASK_COPY.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deletePermanently.isPending}
-              onClick={() => {
-                deletePermanently.mutate({ id: task.id });
-              }}
-            >
-              {TASK_COPY.deletePermanently}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
