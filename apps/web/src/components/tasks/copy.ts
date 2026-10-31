@@ -8,6 +8,7 @@ export const TASK_COPY = {
   markDone: "Mark as done",
   reopen: "Mark as open",
   actions: "Task actions",
+  toggleViews: "Show task views",
   edit: "Edit",
   dueDate: "Due date",
   clearDueDate: "Clear due date",

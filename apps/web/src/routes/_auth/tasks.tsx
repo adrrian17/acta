@@ -1,10 +1,4 @@
 import { TASK_STATES } from "@acta/api/tasks/lifecycle";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@acta/ui/components/tabs";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -19,12 +13,6 @@ const tasksSearchSchema = z.object({
   view: z.enum(TASK_STATES).optional(),
 });
 
-const TABS = [
-  { view: "open", label: TASK_COPY.tabOpen },
-  { view: "done", label: TASK_COPY.tabDone },
-  { view: "trashed", label: TASK_COPY.tabTrash },
-] as const;
-
 export const Route = createFileRoute("/_auth/tasks")({
   component: TasksRoute,
   validateSearch: tasksSearchSchema,
@@ -32,7 +20,6 @@ export const Route = createFileRoute("/_auth/tasks")({
 
 function TasksRoute() {
   const { view = "open" } = Route.useSearch();
-  const navigate = Route.useNavigate();
   // Bumped after each create to remount the composer empty.
   const [composerKey, setComposerKey] = useState(0);
 
@@ -57,25 +44,7 @@ function TasksRoute() {
           }}
         />
       </div>
-      <Tabs
-        value={view}
-        onValueChange={(next: (typeof TASK_STATES)[number]) => {
-          void navigate({ search: next === "open" ? {} : { view: next } });
-        }}
-      >
-        <TabsList>
-          {TABS.map((tab) => (
-            <TabsTrigger key={tab.view} value={tab.view}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {TABS.map((tab) => (
-          <TabsContent key={tab.view} value={tab.view}>
-            <TaskList view={tab.view} />
-          </TabsContent>
-        ))}
-      </Tabs>
+      <TaskList view={view} />
     </main>
   );
 }
