@@ -1,12 +1,18 @@
 import { Button } from "@acta/ui/components/button";
-import { Input } from "@acta/ui/components/input";
+import { Calendar } from "@acta/ui/components/calendar";
 import { Label } from "@acta/ui/components/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@acta/ui/components/popover";
 import { Textarea } from "@acta/ui/components/textarea";
-import { X } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { CalendarIcon, X } from "lucide-react";
+import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import { TASK_COPY } from "./copy";
+import { formatDay, localDay } from "./due-date";
 
 // Mirrors the server's title rule (TASK_TITLE_MAX_CHARS in @acta/api) so the form can explain itself.
 const TASK_TITLE_MAX_CHARS = 500;
@@ -18,6 +24,13 @@ function titleError(title: string): "empty" | "tooLong" | null {
 
   // oxlint-disable-next-line typescript/no-misused-spread -- the limit counts code points, which is exactly what spreading yields
   return [...title].length > TASK_TITLE_MAX_CHARS ? "tooLong" : null;
+}
+
+/** A YYYY-MM-DD day as a local-midnight Date, the shape Calendar works in. */
+function parseDay(day: string): Date {
+  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
+
+  return new Date(year, month - 1, date);
 }
 
 export interface TaskFields {
@@ -45,11 +58,8 @@ export function TaskForm({
 }: TaskFormProps) {
   const [title, setTitle] = useState(initial.title);
   const [dueDate, setDueDate] = useState(initial.dueDate);
-  // A half-typed date reads as "" and fires no change event, so check it on submit instead of dropping it.
-  const [badDate, setBadDate] = useState(false);
-  const dateRef = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const titleId = useId();
-  const dateId = useId();
   const errorId = useId();
   const error = titleError(title);
 
@@ -67,8 +77,6 @@ export function TaskForm({
     message = TASK_COPY.errorTooLong;
   } else if (error === "empty" && (title !== "" || initial.title !== "")) {
     message = TASK_COPY.errorEmpty;
-  } else if (badDate) {
-    message = TASK_COPY.errorBadDate;
   }
 
   return (
@@ -77,10 +85,8 @@ export function TaskForm({
       className="grid gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        const dateIsBad = dateRef.current?.validity.badInput === true;
-        setBadDate(dateIsBad);
 
-        if (!saving && error === null && !dateIsBad) {
+        if (!saving && error === null) {
           onSave({ title, dueDate });
         }
       }}
@@ -112,23 +118,35 @@ export function TaskForm({
         }}
       />
       <div className="flex items-center gap-2">
-        <Label htmlFor={dateId} className="sr-only">
-          {TASK_COPY.dueDate}
-        </Label>
-        <Input
-          id={dateId}
-          ref={dateRef}
-          type="date"
-          value={dueDate ?? ""}
-          aria-invalid={badDate}
-          variant="bare"
-          className="w-auto"
-          onKeyDown={cancelOnEscape}
-          onChange={(event) => {
-            setBadDate(event.target.validity.badInput);
-            setDueDate(event.target.value === "" ? null : event.target.value);
-          }}
-        />
+        <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+          <PopoverTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label={TASK_COPY.dueDate}
+                onKeyDown={cancelOnEscape}
+              />
+            }
+          >
+            <CalendarIcon aria-hidden />
+            {dueDate === null ? TASK_COPY.dueDate : formatDay(dueDate)}
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-auto">
+            <Calendar
+              mode="single"
+              selected={dueDate === null ? undefined : parseDay(dueDate)}
+              defaultMonth={dueDate === null ? undefined : parseDay(dueDate)}
+              onSelect={(date) => {
+                setDueDate(
+                  date === undefined ? null : localDay(date.getTime())
+                );
+                setPickerOpen(false);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
         {dueDate !== null && (
           <Button
             type="button"
@@ -137,7 +155,6 @@ export function TaskForm({
             aria-label={TASK_COPY.clearDueDate}
             onClick={() => {
               setDueDate(null);
-              setBadDate(false);
             }}
           >
             <X aria-hidden />
