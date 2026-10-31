@@ -65,8 +65,8 @@ export default {
   scheduled(controller, _env, ctx) {
     const db = getDb();
     const now = new Date(controller.scheduledTime);
-    ctx.waitUntil(
-      Promise.all([purgeTrashedNotes(db, now), purgeTrashedTasks(db, now)])
-    );
+    // Separate waitUntil calls keep each purge tracked even if the other rejects.
+    ctx.waitUntil(purgeTrashedNotes(db, now));
+    ctx.waitUntil(purgeTrashedTasks(db, now));
   },
 } satisfies ExportedHandler;

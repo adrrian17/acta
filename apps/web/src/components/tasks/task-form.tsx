@@ -108,13 +108,14 @@ export function TaskForm({
           cancelOnEscape(event);
 
           // A title is one line: Enter submits instead of adding a newline.
-          if (event.key === "Enter") {
+          if (event.key === "Enter" && !event.nativeEvent.isComposing) {
             event.preventDefault();
             event.currentTarget.form?.requestSubmit();
           }
         }}
         onChange={(event) => {
-          setTitle(event.target.value);
+          // A pasted line break would fail the server's one-line rule, so fold it to a space.
+          setTitle(event.target.value.replaceAll(/\r\n?|\n/gu, " "));
         }}
       />
       <div className="flex items-center gap-2">

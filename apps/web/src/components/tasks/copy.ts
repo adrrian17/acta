@@ -28,6 +28,8 @@ export const TASK_COPY = {
   errorTooLong: "A task can be at most 500 characters.",
   errorBadDate: "That date isn't valid.",
   conflictTitle: "This task changed on another device.",
+  loadError: "Couldn't load your tasks.",
+  retry: "Try again",
   emptyOpen: "Nothing to do. Add a task above.",
   emptyDone: "No finished tasks yet.",
   emptyTrash: "Trash is empty. Tasks here are deleted after 30 days.",

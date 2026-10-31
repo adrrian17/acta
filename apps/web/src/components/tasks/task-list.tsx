@@ -35,6 +35,24 @@ export function TaskList({ view }: { view: Task["state"] }) {
     return <Loader />;
   }
 
+  if (query.isError && query.data === undefined) {
+    return (
+      <Empty className="my-12">
+        <EmptyHeader>
+          <EmptyTitle>{TASK_COPY.loadError}</EmptyTitle>
+        </EmptyHeader>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void query.refetch();
+          }}
+        >
+          {TASK_COPY.retry}
+        </Button>
+      </Empty>
+    );
+  }
+
   const tasks = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   if (tasks.length === 0) {

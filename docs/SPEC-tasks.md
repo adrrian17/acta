@@ -82,7 +82,7 @@ packages/api/src/routers/index.ts       → mount tasks
 apps/server/src/index.ts                → scheduled also calls purgeTrashedTasks
 
 apps/web/src/routes/_auth/tasks.tsx     → /tasks with Open | Done | Trash tabs
-apps/web/src/components/tasks/          → task-composer, task-list, task-row
+apps/web/src/components/tasks/          → task-form, task-list, task-row
 apps/web/src/components/sidebar.tsx     → add the Tasks nav entry
 ```
 
@@ -120,6 +120,8 @@ All procedures use `protectedProcedure` and validate their input with Zod.
 | Procedure | Input | Output | Errors |
 | --- | --- | --- | --- |
 | `list` | `{ view: "open" \| "done" \| "trashed", cursor?: string, limit?: 1–100 (default 50) }` | `{ items: Task[], nextCursor: string \| null }` | `BAD_REQUEST` (bad cursor) |
+| `counts` | none | `{ open: number, done: number, trashed: number }` | none |
+| `get` | `{ id }` | `Task` | `NOT_FOUND` |
 | `create` | `{ title, dueDate?: string \| null }` | `Task` | `BAD_REQUEST` |
 | `update` | `{ id, title, dueDate: string \| null, version }` | `Task` | `BAD_REQUEST`, `NOT_FOUND`, `CONFLICT`, `PRECONDITION_FAILED` |
 | `markDone` / `reopen` / `trash` / `restore` | `{ id, version }` | `Task` | `NOT_FOUND`, `CONFLICT`, `PRECONDITION_FAILED` |
@@ -227,7 +229,7 @@ export const taskTitle = z
 
 - The page size is 50, since Task rows are much shorter than Note cards. The maximum `limit` is 100.
 - The composer does not parse dates out of the title ("tomorrow", "fri"). The Due date is only set through the date input.
-- The sidebar shows no Task counts.
+- The sidebar shows the Open and Done Task counts, from `tasks.counts`.
 
 ## Open Questions
 
