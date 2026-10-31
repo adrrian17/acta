@@ -1,6 +1,7 @@
 import { Button } from "@acta/ui/components/button";
 import { Input } from "@acta/ui/components/input";
 import { Label } from "@acta/ui/components/label";
+import { Textarea } from "@acta/ui/components/textarea";
 import { X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
@@ -84,23 +85,33 @@ export function TaskForm({
         }
       }}
     >
+      <Label htmlFor={titleId} className="sr-only">
+        {label}
+      </Label>
+      <Textarea
+        id={titleId}
+        value={title}
+        placeholder={TASK_COPY.composerPlaceholder}
+        aria-invalid={message !== null && error !== null}
+        aria-describedby={message === null ? undefined : errorId}
+        autoFocus={onCancel !== undefined}
+        variant="bare"
+        rows={1}
+        className="min-h-12 resize-none"
+        onKeyDown={(event) => {
+          cancelOnEscape(event);
+
+          // A title is one line: Enter submits instead of adding a newline.
+          if (event.key === "Enter") {
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
+          }
+        }}
+        onChange={(event) => {
+          setTitle(event.target.value);
+        }}
+      />
       <div className="flex items-center gap-2">
-        <Label htmlFor={titleId} className="sr-only">
-          {label}
-        </Label>
-        <Input
-          id={titleId}
-          value={title}
-          placeholder={TASK_COPY.composerPlaceholder}
-          aria-invalid={message !== null && error !== null}
-          aria-describedby={message === null ? undefined : errorId}
-          autoFocus={onCancel !== undefined}
-          className="flex-1"
-          onKeyDown={cancelOnEscape}
-          onChange={(event) => {
-            setTitle(event.target.value);
-          }}
-        />
         <Label htmlFor={dateId} className="sr-only">
           {TASK_COPY.dueDate}
         </Label>
@@ -110,6 +121,7 @@ export function TaskForm({
           type="date"
           value={dueDate ?? ""}
           aria-invalid={badDate}
+          variant="bare"
           className="w-auto"
           onKeyDown={cancelOnEscape}
           onChange={(event) => {
