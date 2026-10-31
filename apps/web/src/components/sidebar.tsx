@@ -158,7 +158,15 @@ export function DesktopSidebar() {
 export function TopBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const href = useRouterState({ select: (s) => s.location.href });
+  const search = useSearch({ strict: false });
   const title = NAV_ITEMS.find((item) => item.to === pathname)?.label;
+
+  const taskView =
+    pathname === "/tasks"
+      ? TASK_VIEWS.find(
+          (item) => item.view === search.view && item.view !== "open"
+        )
+      : undefined;
 
   // The sheet is open only at the location where it was opened, so navigating closes it.
   const [openedAt, setOpenedAt] = useState<string | null>(null);
@@ -194,7 +202,10 @@ export function TopBar() {
       <span aria-hidden className="text-muted-foreground max-lg:hidden">
         /
       </span>
-      <h1 className="text-sm font-semibold">{title}</h1>
+      <h1 className="text-sm font-semibold">
+        {title}
+        {taskView && ` • ${taskView.label}`}
+      </h1>
     </header>
   );
 }
