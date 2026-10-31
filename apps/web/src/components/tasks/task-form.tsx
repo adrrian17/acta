@@ -160,7 +160,16 @@ export function TaskForm({
             <X aria-hidden />
           </Button>
         )}
-        {!onCancel && (
+        {onCancel ? (
+          <div className="ml-auto flex gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+              {TASK_COPY.cancel}
+            </Button>
+            <Button type="submit" size="sm" disabled={saving || error !== null}>
+              {TASK_COPY.save}
+            </Button>
+          </div>
+        ) : (
           <Button
             type="submit"
             size="icon-sm"
@@ -178,16 +187,6 @@ export function TaskForm({
           {message}
         </p>
       )}
-      {onCancel ? (
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            {TASK_COPY.cancel}
-          </Button>
-          <Button type="submit" size="sm" disabled={saving || error !== null}>
-            {TASK_COPY.save}
-          </Button>
-        </div>
-      ) : null}
     </form>
   );
 }
