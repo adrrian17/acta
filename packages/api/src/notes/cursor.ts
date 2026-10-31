@@ -13,9 +13,9 @@ export const trashCursor = z.object({
   id: z.string(),
 });
 
-// The key holds only ASCII (ids, numbers, booleans), so btoa is safe.
+// The key holds only ASCII (ids, numbers, booleans, YYYY-MM-DD dates), so btoa is safe.
 export function encodeCursor(
-  key: z.infer<typeof timelineCursor> | z.infer<typeof trashCursor>
+  key: Readonly<Record<string, string | number | boolean | null>>
 ): string {
   return btoa(JSON.stringify(key))
     .replaceAll("+", "-")

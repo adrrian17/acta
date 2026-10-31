@@ -18,10 +18,16 @@ acta is a personal knowledge system for a single person: notes first, with searc
 
 **Archived**: The state of a Note taken out of the Timeline but kept indefinitely. _Avoid_: Hidden, stored
 
-**Trashed**: The state of a Note waiting for permanent deletion. It can be restored until it is purged. _Avoid_: Deleted, removed
+**Trashed**: The state of a Note or Task waiting for permanent deletion. It can be restored until it is purged. _Avoid_: Deleted, removed
 
 **Pinned**: A flag that keeps a Note at the top of the Timeline. Only Timeline Notes can be pinned. _Avoid_: Starred, favorite
 
 ## Tasks
 
 **Task**: A standalone to-do item owned by the Owner. A Task has no relation to any Note and belongs to no project. _Avoid_: Todo, ticket, issue, action item
+
+**Open**: The state of a Task still to be done. _Avoid_: Pending, active, todo
+
+**Done**: The state of a Task the Owner has finished. It is kept indefinitely and is read-only until reopened. _Avoid_: Completed, closed, checked
+
+**Due date**: The optional calendar day by which a Task should be done. A day only, with no time or time zone. _Avoid_: Deadline, due time, reminder
