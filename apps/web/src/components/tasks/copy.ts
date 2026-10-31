@@ -14,6 +14,7 @@ export const TASK_COPY = {
   overdue: (date: string) => `Overdue · ${date}`,
   dueToday: "Today",
   doneAt: (date: string) => `Done ${date}`,
+  send: "Send",
   save: "Save",
   cancel: "Cancel",
   trash: "Move to trash",

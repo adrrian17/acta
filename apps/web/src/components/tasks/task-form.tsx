@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from "@acta/ui/components/popover";
 import { Textarea } from "@acta/ui/components/textarea";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon, Save, X } from "lucide-react";
 import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
@@ -160,6 +160,18 @@ export function TaskForm({
             <X aria-hidden />
           </Button>
         )}
+        {!onCancel && (
+          <Button
+            type="submit"
+            size="icon-sm"
+            aria-label={TASK_COPY.send}
+            title={TASK_COPY.send}
+            className="ml-auto"
+            disabled={saving || error !== null}
+          >
+            <Save aria-hidden />
+          </Button>
+        )}
       </div>
       {message !== null && (
         <p id={errorId} role="alert" className="text-destructive text-sm">
@@ -175,10 +187,7 @@ export function TaskForm({
             {TASK_COPY.save}
           </Button>
         </div>
-      ) : (
-        // Enter submits; a form needs a submit control for that to work in every browser.
-        <button type="submit" hidden aria-hidden tabIndex={-1} />
-      )}
+      ) : null}
     </form>
   );
 }
