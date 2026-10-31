@@ -70,7 +70,9 @@ function RouteComponent() {
             <Feather aria-hidden className="text-primary size-5" />
             {COPY.appName}
           </span>
-          <CardTitle>{COPY.title}</CardTitle>
+          <CardTitle>
+            <h1>{COPY.title}</h1>
+          </CardTitle>
           <CardDescription>{COPY.tagline}</CardDescription>
         </CardHeader>
         <CardContent>
