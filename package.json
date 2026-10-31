@@ -16,7 +16,7 @@
     "staged": "vp staged",
     "hooks:setup": "vp config",
     "dev:web": "vp run --filter web dev:bare",
-    "dev:server": "vp run --filter hono dev:bare",
+    "dev:server": "vp run --filter @acta/infra dev",
     "db:generate": "vp run --filter @acta/db db:generate",
     "deploy": "vp run --filter @acta/infra deploy",
     "destroy": "vp run --filter @acta/infra destroy",

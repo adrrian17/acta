@@ -5,8 +5,8 @@
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "alchemy dev",
-    "deploy": "alchemy deploy",
-    "destroy": "alchemy destroy"
+    "deploy": "APP_ENV=production alchemy deploy",
+    "destroy": "APP_ENV=production alchemy destroy"
   },
   "dependencies": {
     "zod": "catalog:"

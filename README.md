@@ -75,7 +75,9 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 
 ## Environment Configuration
 
-Every variable is declared once in the root `.env.schema`, and its values live in the root `.env`. Each package's `.env.schema` imports the root with a `pick` list of only the items it needs, so the web app never sees server secrets. Varlock generates `src/env.ts` during installation; run `pnpm run env:generate` after changing a schema. Commit schemas, and keep secrets in the ignored root `.env` or your deployment platform.
+Shared app variables are declared once in the root `.env.schema`. Infrastructure variables are declared in `packages/infra/.env.schema`. Development needs no `.env`. Each app key has a fake fallback in development, and values in the root `.env` or process environment still take precedence. To use local GitHub sign-in, set `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `OWNER_GITHUB_ID`, and `CORS_ORIGIN=http://localhost:3001` in the ignored root `.env`. Register `http://localhost:3000/api/auth/callback/github` as the local OAuth callback.
+
+Deployments use `packages/infra/.env.production` to resolve secrets from the 1Password vault selected by `OP_VAULT_ID`. The active GitHub Environment supplies that ID. Production validation fails without `OP_TOKEN`. Each package's `.env.schema` imports only the keys it needs, so the web app never sees server secrets. Varlock generates `src/env.ts` during installation. Run `pnpm run env:generate` after changing a schema. Keep deployment secrets in 1Password and local overrides in the ignored root `.env`.
 
 Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
 
@@ -90,22 +92,22 @@ Run standalone Node/Bun tools that use Varlock from the owning app directory so 
 ### Alchemy
 
 - Target: web on Cloudflare + server on Cloudflare
-- Configure provider accounts: `cd packages/infra && pnpm exec alchemy profile edit`
+- Configure provider accounts for remote deployments: `cd packages/infra && pnpm exec alchemy profile edit`
 - Dev: pnpm run dev
 - Deploy: pnpm run deploy
 - Destroy: pnpm run destroy
 
 `alchemy profile edit` stores the selected Axiom, Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.
 
-Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:
+Deploys are staged. The live app uses the `live_adrrian17` stage. Run the package script so `APP_ENV=production` is set:
 
 ```bash
-cd packages/infra && pnpm exec alchemy deploy --stage production
+cd packages/infra && pnpm run deploy --stage live_adrrian17
 ```
 
 ### Production origins
 
-- Required after the first deploy: set `CORS_ORIGIN` in the root `.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.
+- Required after the first deploy: set `CORS_ORIGIN` in the `github-actions` item in the vault selected by the production GitHub Environment's `OP_VAULT_ID`, then deploy the server again.
 
 ## Git Hooks and Formatting
 
@@ -132,7 +134,7 @@ acta/
 - `pnpm run dev`: Start all applications in development mode
 - `pnpm run build`: Build all applications
 - `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
+- `pnpm run dev:server`: Start the Alchemy stack with the server and web app
 - `pnpm run check-types`: Check TypeScript types across all apps
 - `pnpm run db:generate`: Generate database client/types
 - `pnpm run check`: Run Vite+ format/lint checks and workspace TypeScript checks

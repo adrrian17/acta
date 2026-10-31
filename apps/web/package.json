@@ -6,10 +6,10 @@
   "scripts": {
     "build": "vp build",
     "serve": "vp preview",
-    "start": "vp dev",
+    "start": "vp run dev:bare",
     "check-types": "vp build && tsc --noEmit",
     "generate-pwa-assets": "pwa-assets-generator",
-    "dev:bare": "vp dev",
+    "dev:bare": "varlock run -- vp dev",
     "env:generate": "varlock codegen"
   },
   "dependencies": {
