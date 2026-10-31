@@ -57,6 +57,7 @@ function SidebarContent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [tasksOpen, setTasksOpen] = useState(pathname === "/tasks");
   const counts = useQuery(trpc.notes.counts.queryOptions());
+  const taskCounts = useQuery(trpc.tasks.counts.queryOptions());
   const search = useSearch({ strict: false });
 
   return (
@@ -125,9 +126,12 @@ function SidebarContent() {
                       to="/tasks"
                       search={view === "open" ? {} : { view }}
                       activeOptions={{ exact: true, includeSearch: true }}
-                      className="text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground rounded-lg px-3 py-1.5 text-sm"
+                      className="text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground flex items-center rounded-lg px-3 py-1.5 text-sm"
                     >
-                      {viewLabel}
+                      <span className="flex-1">{viewLabel}</span>
+                      <span className="text-xs tabular-nums">
+                        {view !== "trashed" && taskCounts.data?.[view]}
+                      </span>
                     </Link>
                   ))}
                 </div>

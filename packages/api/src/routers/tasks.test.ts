@@ -330,3 +330,26 @@ describe("views", () => {
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 });
+
+describe("counts", () => {
+  it("counts Tasks per state, with zero for empty states", async () => {
+    expect(await caller.tasks.counts()).toEqual({
+      open: 0,
+      done: 0,
+      trashed: 0,
+    });
+
+    const a = await caller.tasks.create({ title: "a" });
+    const b = await caller.tasks.create({ title: "b" });
+    await caller.tasks.create({ title: "c" });
+
+    await caller.tasks.markDone({ id: a.id, version: 1 });
+    await caller.tasks.trash({ id: b.id, version: 1 });
+
+    expect(await caller.tasks.counts()).toEqual({
+      open: 1,
+      done: 1,
+      trashed: 1,
+    });
+  });
+});

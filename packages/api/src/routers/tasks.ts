@@ -1,7 +1,7 @@
 import type { Database } from "@acta/db";
 import { task } from "@acta/db/schema/tasks";
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { z } from "zod";
 
@@ -9,7 +9,7 @@ import { protectedProcedure, router } from "../index";
 import { decodeCursor, encodeCursor, trashCursor } from "../notes/cursor";
 import { doneCursor, openCursor } from "../tasks/cursor";
 import { applyTransition, TASK_STATES } from "../tasks/lifecycle";
-import type { Transition } from "../tasks/lifecycle";
+import type { TaskState, Transition } from "../tasks/lifecycle";
 import { toTask } from "../tasks/task";
 import type { Task } from "../tasks/task";
 import { taskDueDate, taskTitle } from "../tasks/title";
@@ -181,6 +181,26 @@ export const tasksRouter = router({
       nextCursor:
         rows.length > input.limit && last ? cursorOf(last, input.view) : null,
     };
+  }),
+
+  counts: protectedProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({ state: task.state, total: count() })
+      .from(task)
+      .groupBy(task.state);
+
+    // A new TaskState fails to compile here until it gets its zero.
+    const counts: Record<TaskState, number> = {
+      open: 0,
+      done: 0,
+      trashed: 0,
+    };
+
+    for (const { state, total } of rows) {
+      counts[state] = total;
+    }
+
+    return counts;
   }),
 
   get: protectedProcedure.input(taskId).query(async ({ ctx, input }) => {
