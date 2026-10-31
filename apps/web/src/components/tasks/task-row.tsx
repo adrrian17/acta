@@ -181,44 +181,48 @@ export function TaskRow({ task }: { task: Task }) {
   }
 
   return (
-    <div className="bg-card flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2">
+    <div className="bg-card flex min-h-12 items-start gap-3 rounded-xl border px-3 py-2">
       {task.state !== "trashed" && (
-        <Checkbox
-          checked={task.state === "done"}
-          disabled={busy}
-          aria-label={
-            task.state === "done" ? TASK_COPY.reopen : TASK_COPY.markDone
-          }
-          onCheckedChange={(checked) => {
-            if (checked) {
-              markDone.mutate(versioned);
-            } else {
-              reopen.mutate(versioned);
+        <div className="flex h-8 items-center">
+          <Checkbox
+            checked={task.state === "done"}
+            disabled={busy}
+            aria-label={
+              task.state === "done" ? TASK_COPY.reopen : TASK_COPY.markDone
             }
-          }}
-        />
+            onCheckedChange={(checked) => {
+              if (checked) {
+                markDone.mutate(versioned);
+              } else {
+                reopen.mutate(versioned);
+              }
+            }}
+          />
+        </div>
       )}
       <p
         className={cn(
-          "min-w-0 flex-1 text-sm break-words",
+          "min-w-0 flex-1 py-1.5 text-sm break-words",
           task.state === "done" && "text-muted-foreground line-through"
         )}
       >
         {task.title}
       </p>
-      {task.state === "open" && task.dueDate !== null && (
-        <DueLabel dueDate={task.dueDate} />
-      )}
-      {task.state === "done" && task.doneAt !== null && (
-        <span className="text-muted-foreground shrink-0 text-xs">
-          {TASK_COPY.doneAt(new Date(task.doneAt).toLocaleDateString())}
-        </span>
-      )}
-      {task.purgeAt !== null && (
-        <span className="text-muted-foreground shrink-0 text-xs">
-          {TASK_COPY.purgeAt(new Date(task.purgeAt).toLocaleDateString())}
-        </span>
-      )}
+      <div className="flex h-8 shrink-0 items-center">
+        {task.state === "open" && task.dueDate !== null && (
+          <DueLabel dueDate={task.dueDate} />
+        )}
+        {task.state === "done" && task.doneAt !== null && (
+          <span className="text-muted-foreground shrink-0 text-xs">
+            {TASK_COPY.doneAt(new Date(task.doneAt).toLocaleDateString())}
+          </span>
+        )}
+        {task.purgeAt !== null && (
+          <span className="text-muted-foreground shrink-0 text-xs">
+            {TASK_COPY.purgeAt(new Date(task.purgeAt).toLocaleDateString())}
+          </span>
+        )}
+      </div>
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
