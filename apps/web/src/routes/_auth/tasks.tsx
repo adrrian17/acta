@@ -34,16 +34,18 @@ function TasksRoute() {
 
   return (
     <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
-      <div className="bg-card focus-within:border-ring/60 rounded-xl border p-3 transition-colors">
-        <TaskForm
-          key={composerKey}
-          label={TASK_COPY.composerPlaceholder}
-          saving={create.isPending}
-          onSave={(fields) => {
-            create.mutate(fields);
-          }}
-        />
-      </div>
+      {view === "open" && (
+        <div className="bg-card focus-within:border-ring/60 rounded-xl border p-3 transition-colors">
+          <TaskForm
+            key={composerKey}
+            label={TASK_COPY.composerPlaceholder}
+            saving={create.isPending}
+            onSave={(fields) => {
+              create.mutate(fields);
+            }}
+          />
+        </div>
+      )}
       <TaskList view={view} />
     </main>
   );
