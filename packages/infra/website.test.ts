@@ -7,6 +7,7 @@ const boundary = vi.hoisted(() => {
 
   return {
     bodies,
+    worker: vi.fn<(id: string, props: { name?: unknown }) => void>(),
     website: vi.fn<(id: string, props: { name?: unknown }) => void>(),
   };
 });
@@ -37,17 +38,30 @@ vi.mock("@alchemy.run/cloudflare", () => ({
   providers: () => ({}),
   state: () => ({}),
   Worker: Object.assign(
-    () => Effect.succeed({ url: { as: () => "https://server.example" } }),
+    (
+      id: string,
+      props: { name?: unknown } | Effect.Effect<{ name?: unknown }>
+    ) =>
+      Effect.gen(function* worker() {
+        const resolved = yield* Effect.isEffect(props)
+          ? props
+          : Effect.succeed(props);
+
+        boundary.worker(id, resolved);
+
+        return { url: { as: () => "https://server.example" } };
+      }),
     { URL: Effect.succeed("https://server.example") }
   ),
 }));
 
 await import("./alchemy.run");
 
-test.each(["preview", "prod"])(
-  "Website receives a resolved Worker name for %s",
+test.each(["preview", "prod", "local"])(
+  "the stack passes resolved Worker names for %s",
   async (stage) => {
     boundary.website.mockClear();
+    boundary.worker.mockClear();
     const [body] = boundary.bodies;
     expect(body).toBeDefined();
 
@@ -57,6 +71,10 @@ test.each(["preview", "prod"])(
 
     await Effect.runPromise(body.pipe(Effect.provideService(Stage, stage)));
 
+    expect(boundary.worker).toHaveBeenCalledExactlyOnceWith(
+      "server",
+      expect.objectContaining({ name: `acta-server-${stage}` })
+    );
     expect(boundary.website).toHaveBeenCalledExactlyOnceWith(
       "web",
       expect.objectContaining({ name: `acta-web-${stage}` })
