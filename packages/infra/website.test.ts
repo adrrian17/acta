@@ -82,7 +82,7 @@ test.each([
       "server",
       expect.objectContaining({
         name: `acta-server-${nameStage}`,
-        domain: isProd ? "api.acta.adrianayala.mx" : undefined,
+        domain: isProd ? "acta-api.adrianayala.mx" : undefined,
       })
     );
     expect(boundary.website).toHaveBeenCalledExactlyOnceWith(

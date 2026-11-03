@@ -33,7 +33,7 @@ All same-repository pull requests share the fixed `preview` stage, so the previe
 
 Changing an existing frontend from Alchemy's generated name to this explicit name changes its public URL. Review the resource replacement before applying this change to an existing installation. Changing an existing server from its generated name to `acta-server-<stage>` replaces that Worker and changes its public URL once. Update the corresponding GitHub OAuth app callback after the rename. The D1 `database` resource and its binding remain unchanged, so this replacement does not delete the database. Keep the same stage and state store, and review the deployment plan for the Worker replacement before applying it.
 
-The `prod` stage also serves on custom domains: `acta.adrianayala.mx` (web) and `api.acta.adrianayala.mx` (server). They are declared in `packages/infra/web-origin.ts`. The `adrianayala.mx` zone must exist in the Cloudflare account, and the API token needs DNS edit and zone read access on it. Alchemy creates the DNS records and certificates. Other stages stay on `workers.dev`. The `workers.dev` URLs of the production Workers keep responding unless disabled.
+The `prod` stage also serves on custom domains: `acta.adrianayala.mx` (web) and `acta-api.adrianayala.mx` (server). They are declared in `packages/infra/web-origin.ts`. The `adrianayala.mx` zone must exist in the Cloudflare account, and the API token needs DNS edit and zone read access on it. Alchemy creates the DNS records and certificates. Other stages stay on `workers.dev`. The `workers.dev` URLs of the production Workers keep responding unless disabled.
 
 ## Persistent state and the shared preview
 
@@ -47,7 +47,7 @@ The `preview` stage is a single shared environment. Each deploy overwrites the p
 
 1. Open a trusted same-repository PR. Confirm its deploy job succeeds and records distinct web and server URLs.
 2. Open the web URL (`https://acta-web-preview.<subdomain>.workers.dev`). Confirm requests to the server pass CORS and that the server trusts only that preview's frontend origin.
-3. Register the preview GitHub OAuth app with callback `https://acta-server-preview.<workers-subdomain>.workers.dev/api/auth/callback/github`. Replace `<workers-subdomain>` with the account's subdomain label. Use `https://api.acta.adrianayala.mx/api/auth/callback/github` for the production OAuth app. Better Auth is mounted on the server at `/api/auth/*`. Confirm the server URL against the deploy job output. The preview URL is the same for every PR, so no per-PR OAuth setup is needed.
+3. Register the preview GitHub OAuth app with callback `https://acta-server-preview.<workers-subdomain>.workers.dev/api/auth/callback/github`. Replace `<workers-subdomain>` with the account's subdomain label. Use `https://acta-api.adrianayala.mx/api/auth/callback/github` for the production OAuth app. Better Auth is mounted on the server at `/api/auth/*`. Confirm the server URL against the deploy job output. The preview URL is the same for every PR, so no per-PR OAuth setup is needed.
 4. Open a second PR and confirm it deploys to the same web and server URLs.
 5. Push the reviewed change to `main` when ready to deploy production.
 

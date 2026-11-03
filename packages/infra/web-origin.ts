@@ -11,7 +11,7 @@ export const serverName = workerName("server");
 export const webName = workerName("web");
 
 const PRODUCTION_DOMAINS = {
-  server: "api.acta.adrianayala.mx",
+  server: "acta-api.adrianayala.mx",
   web: "acta.adrianayala.mx",
 } as const;
 
