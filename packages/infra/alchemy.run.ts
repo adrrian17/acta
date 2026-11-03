@@ -4,7 +4,7 @@ import { Stack } from "alchemy";
 import { Config, Effect } from "effect";
 import "varlock/auto-load";
 
-import { serverName, webName, webOrigin } from "./web-origin";
+import { customDomain, serverName, webName, webOrigin } from "./web-origin";
 
 export const db = D1.Database("database", {
   migrations: "../../packages/db/src/migrations",
@@ -14,9 +14,11 @@ export const server = Worker(
   "server",
   Effect.gen(function* serverProps() {
     const name = yield* serverName;
+    const domain = yield* customDomain("server");
 
     return {
       name,
+      domain,
       main: "../../apps/server/src/index.ts",
       compatibility: {
         flags: ["nodejs_compat"],
@@ -50,9 +52,11 @@ export default Stack(
   Effect.gen(function* stack() {
     const serverWorker = yield* server;
     const name = yield* webName;
+    const domain = yield* customDomain("web");
 
     const webWorker = yield* Website.Vite("web", {
       name,
+      domain,
       rootDir: "../../apps/web",
       assets: {
         htmlHandling: "auto-trailing-slash",

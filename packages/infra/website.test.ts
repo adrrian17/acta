@@ -76,13 +76,21 @@ test.each([
 
     await Effect.runPromise(body.pipe(Effect.provideService(Stage, stage)));
 
+    const isProd = stage === "prod";
+
     expect(boundary.worker).toHaveBeenCalledExactlyOnceWith(
       "server",
-      expect.objectContaining({ name: `acta-server-${nameStage}` })
+      expect.objectContaining({
+        name: `acta-server-${nameStage}`,
+        domain: isProd ? "api.acta.adrianayala.mx" : undefined,
+      })
     );
     expect(boundary.website).toHaveBeenCalledExactlyOnceWith(
       "web",
-      expect.objectContaining({ name: `acta-web-${nameStage}` })
+      expect.objectContaining({
+        name: `acta-web-${nameStage}`,
+        domain: isProd ? "acta.adrianayala.mx" : undefined,
+      })
     );
   }
 );

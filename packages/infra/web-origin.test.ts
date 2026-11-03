@@ -30,10 +30,10 @@ test("every preview deploys to the stable preview frontend origin", async () => 
   });
 });
 
-test("production uses the production frontend origin", async () => {
+test("production uses its custom domain as the frontend origin", async () => {
   expect(await resolveWeb("prod", false)).toEqual({
     name: "acta-web-prod",
-    origin: "https://acta-web-prod.example.workers.dev",
+    origin: "https://acta.adrianayala.mx",
   });
 });
 
