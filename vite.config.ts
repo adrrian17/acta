@@ -37,6 +37,14 @@ export default defineConfig({
     ],
     ignorePatterns: [...core.ignorePatterns!, ...skills, ...shadcnComponents],
     jsPlugins: [...jsPlugins.jsPlugins, ...shadcn.jsPlugins],
+    overrides: [
+      {
+        files: [".coderabbit.config.ts"],
+        rules: {
+          "github/filenames-match-regex": "off",
+        },
+      },
+    ],
     rules: {
       // shadcn generates function declarations; keep `shadcn add` output lint-clean
       "func-style": "off",
