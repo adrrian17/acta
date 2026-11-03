@@ -57,9 +57,14 @@ vi.mock("@alchemy.run/cloudflare", () => ({
 
 await import("./alchemy.run");
 
-test.each(["preview", "prod", "local"])(
+test.each([
+  ["preview", "preview"],
+  ["prod", "prod"],
+  ["local", "local"],
+  ["live_adrrian17", "live-adrrian17"],
+])(
   "the stack passes resolved Worker names for %s",
-  async (stage) => {
+  async (stage, nameStage) => {
     boundary.website.mockClear();
     boundary.worker.mockClear();
     const [body] = boundary.bodies;
@@ -73,11 +78,11 @@ test.each(["preview", "prod", "local"])(
 
     expect(boundary.worker).toHaveBeenCalledExactlyOnceWith(
       "server",
-      expect.objectContaining({ name: `acta-server-${stage}` })
+      expect.objectContaining({ name: `acta-server-${nameStage}` })
     );
     expect(boundary.website).toHaveBeenCalledExactlyOnceWith(
       "web",
-      expect.objectContaining({ name: `acta-web-${stage}` })
+      expect.objectContaining({ name: `acta-web-${nameStage}` })
     );
   }
 );

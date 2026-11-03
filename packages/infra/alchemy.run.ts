@@ -1,11 +1,10 @@
 import { D1, providers, state, Website, Worker } from "@alchemy.run/cloudflare";
 import type { InferEnv } from "@alchemy.run/cloudflare";
 import { Stack } from "alchemy";
-import { Stage } from "alchemy/Stage";
 import { Config, Effect } from "effect";
 import "varlock/auto-load";
 
-import { webName, webOrigin } from "./web-origin";
+import { serverName, webName, webOrigin } from "./web-origin";
 
 export const db = D1.Database("database", {
   migrations: "../../packages/db/src/migrations",
@@ -14,10 +13,10 @@ export const db = D1.Database("database", {
 export const server = Worker(
   "server",
   Effect.gen(function* serverProps() {
-    const stage = yield* Stage;
+    const name = yield* serverName;
 
     return {
-      name: `acta-server-${stage}`,
+      name,
       main: "../../apps/server/src/index.ts",
       compatibility: {
         flags: ["nodejs_compat"],

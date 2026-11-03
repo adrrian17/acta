@@ -2,7 +2,13 @@ import { AlchemyContext } from "alchemy/AlchemyContext";
 import { Stage } from "alchemy/Stage";
 import { Config, Effect } from "effect";
 
-export const webName = Stage.pipe(Effect.map((stage) => `acta-web-${stage}`));
+const workerName = (service: "server" | "web") =>
+  Stage.pipe(
+    Effect.map((stage) => `acta-${service}-${stage.replaceAll("_", "-")}`)
+  );
+
+export const serverName = workerName("server");
+export const webName = workerName("web");
 
 export const webOrigin = Effect.gen(function* webOrigin() {
   if ((yield* AlchemyContext).dev) {

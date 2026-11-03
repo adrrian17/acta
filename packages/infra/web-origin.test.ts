@@ -41,3 +41,10 @@ test("local development needs no Cloudflare subdomain", async () => {
   const web = await resolveWeb("local", true);
   expect(web.origin).toBe("http://localhost:3001");
 });
+
+test("the default personal stage uses a valid frontend name and matching origin", async () => {
+  expect(await resolveWeb("live_adrrian17", false)).toEqual({
+    name: "acta-web-live-adrrian17",
+    origin: "https://acta-web-live-adrrian17.example.workers.dev",
+  });
+});
