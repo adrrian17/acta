@@ -4,19 +4,17 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, reopened, synchronize, closed]
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: read
 
-# One lane per Alchemy stage, checks included, so a stale check cannot redeploy a preview after its close ran.
 concurrency:
-  group: alchemy-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'live_adrrian17' }}
+  group: alchemy-${{ github.ref }}
   queue: max
 
 jobs:
   check:
-    if: github.event_name == 'push' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -36,45 +34,27 @@ jobs:
 
   reconcile:
     needs: check
-    # Checks are skipped for a closed PR, so a same-repo close runs without them.
-    if: >-
-      !cancelled() && (
-        (github.event_name == 'push' && needs.check.result == 'success') ||
-        (github.event_name == 'pull_request'
-          && github.event.pull_request.head.repo.full_name == github.repository
-          && github.event.pull_request.user.login != 'dependabot[bot]'
-          && github.actor != 'dependabot[bot]'
-          && (github.event.action == 'closed' || needs.check.result == 'success'))
-      )
+    if: github.event_name == 'push' && needs.check.result == 'success'
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'push' && 'production' || 'preview' }}
+    environment: production
     permissions:
       contents: read
-      pull-requests: read
     env:
-      ALCHEMY_STAGE: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'live_adrrian17' }}
+      ALCHEMY_STAGE: live_adrrian17
       OP_VAULT_ID: ${{ vars.OP_VAULT_ID }}
     steps:
       - id: fresh
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const { payload, eventName, repo } = context;
-            let current;
-            if (eventName === "push") {
-              const { data } = await github.rest.git.getRef({ ...repo, ref: "heads/main" });
-              current = data.object.sha === context.sha;
-            } else {
-              const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: payload.pull_request.number });
-              const state = payload.action === "closed" ? "closed" : "open";
-              current = pr.state === state && pr.head.sha === payload.pull_request.head.sha;
-            }
+            const { data } = await github.rest.git.getRef({ ...context.repo, ref: "heads/main" });
+            const current = data.object.sha === context.sha;
             core.setOutput("current", String(current));
             if (!current) core.notice("Event is stale, skipping this run.");
       - if: steps.fresh.outputs.current == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
       - if: steps.fresh.outputs.current == 'true'
         uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
@@ -91,16 +71,8 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const { payload, eventName, repo } = context;
-            let current;
-            if (eventName === "push") {
-              const { data } = await github.rest.git.getRef({ ...repo, ref: "heads/main" });
-              current = data.object.sha === context.sha;
-            } else {
-              const { data: pr } = await github.rest.pulls.get({ ...repo, pull_number: payload.pull_request.number });
-              const state = payload.action === "closed" ? "closed" : "open";
-              current = pr.state === state && pr.head.sha === payload.pull_request.head.sha;
-            }
+            const { data } = await github.rest.git.getRef({ ...context.repo, ref: "heads/main" });
+            const current = data.object.sha === context.sha;
             core.setOutput("current", String(current));
             if (!current) core.notice("Event went stale during setup, skipping mutation.");
       - if: steps.fresh_again.outputs.current == 'true'
@@ -111,8 +83,8 @@ jobs:
           NODE_ENV: production
           APP_ENV: production
         run: >-
-          pnpm exec varlock run --inject vars --filter CLOUDFLARE_API_TOKEN,CLOUDFLARE_ACCOUNT_ID -- pnpm exec alchemy provider check-env --provider Cloudflare
-      - if: steps.fresh_again.outputs.current == 'true' && !(github.event_name == 'pull_request' && github.event.action == 'closed')
+          pnpm exec varlock run --include-internal --inject vars --filter CLOUDFLARE_API_TOKEN,CLOUDFLARE_ACCOUNT_ID -- pnpm exec alchemy provider check-env --provider Cloudflare
+      - if: steps.fresh_again.outputs.current == 'true'
         working-directory: packages/infra
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -120,17 +92,3 @@ jobs:
           APP_ENV: production
           OP_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
         run: pnpm run deploy --yes
-      - if: steps.fresh_again.outputs.current == 'true' && github.event_name == 'pull_request' && github.event.action == 'closed'
-        working-directory: packages/infra
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          NODE_ENV: production
-          APP_ENV: production
-          OP_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          EVENT_NAME: ${{ github.event_name }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          [ "$EVENT_NAME" = pull_request ] || { echo "destroy requires a pull_request event" >&2; exit 1; }
-          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || { echo "invalid PR number: $PR_NUMBER" >&2; exit 1; }
-          [ "$ALCHEMY_STAGE" = "pr-$PR_NUMBER" ] || { echo "stage $ALCHEMY_STAGE does not match pr-$PR_NUMBER" >&2; exit 1; }
-          pnpm run destroy --yes
