@@ -100,12 +100,12 @@ Run standalone Node/Bun tools that use Varlock from the owning app directory so 
 Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:
 
 ```bash
-cd packages/infra && pnpm exec alchemy deploy --stage production
+cd packages/infra && pnpm exec alchemy deploy --stage prod
 ```
 
 ### Production origins
 
-- Required after the first deploy: set `CORS_ORIGIN` in the root `.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.
+- Set `CLOUDFLARE_WORKERS_SUBDOMAIN` to the account's `workers.dev` label. Alchemy derives the web origin as `https://acta-web-<stage>.<subdomain>.workers.dev` and passes it to the server for CORS. See [docs/ci-setup.md](docs/ci-setup.md).
 
 ## Git Hooks and Formatting
 

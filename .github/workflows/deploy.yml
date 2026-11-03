@@ -8,7 +8,6 @@ on:
 
 env:
   STAGE: ${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
-  INFISICAL_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
   VARLOCK_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
   NODE_ENV: production
 
@@ -31,13 +30,25 @@ jobs:
         with:
           node-version: "24"
           cache: pnpm
-      - name: Load secrets from Infisical
+      # Separate steps so a missing preview variable never falls back to the production identity.
+      - name: Load preview secrets from Infisical
+        if: github.event_name == 'pull_request'
         uses: Infisical/secrets-action@v1.0.9
         with:
           method: oidc
-          identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
+          identity-id: ${{ vars.INFISICAL_PREVIEW_IDENTITY_ID }}
           project-slug: ${{ vars.INFISICAL_PROJECT_SLUG }}
-          env-slug: ${{ env.INFISICAL_ENV }}
+          env-slug: preview
+          oidc-audience: https://github.com/${{ github.repository_owner }}
+          export-type: env
+      - name: Load production secrets from Infisical
+        if: github.event_name == 'push'
+        uses: Infisical/secrets-action@v1.0.9
+        with:
+          method: oidc
+          identity-id: ${{ vars.INFISICAL_PRODUCTION_IDENTITY_ID }}
+          project-slug: ${{ vars.INFISICAL_PROJECT_SLUG }}
+          env-slug: prod
           oidc-audience: https://github.com/${{ github.repository_owner }}
           export-type: env
       - run: pnpm install --frozen-lockfile --prod=false
