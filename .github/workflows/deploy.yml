@@ -30,6 +30,20 @@ jobs:
         with:
           node-version: "24"
           cache: pnpm
+      - name: Diagnose OIDC public claims
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const token = await core.getIDToken('https://github.com/adrrian17');
+              core.setSecret(token);
+              const { sub, iss, aud, repository, event_name } = JSON.parse(
+                Buffer.from(token.split('.')[1], 'base64url').toString('utf8')
+              );
+              core.info(JSON.stringify({ sub, iss, aud, repository, event_name }));
+            } catch {
+              core.setFailed('Unable to inspect OIDC public claims safely.');
+            }
       # Separate steps so a missing preview variable never falls back to the production identity.
       - name: Load preview secrets from Infisical
         if: github.event_name == 'pull_request'
