@@ -66,5 +66,47 @@ jobs:
           oidc-audience: https://github.com/${{ github.repository_owner }}
           export-type: env
       - run: pnpm install --frozen-lockfile --prod=false
+      - name: Diagnose Cloudflare API access
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = process.env.CLOUDFLARE_API_TOKEN;
+            const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+            if (!token || !accountId) {
+              core.setFailed('Cloudflare credential configuration is missing.');
+              return;
+            }
+            core.setSecret(token);
+            core.setSecret(accountId);
+            const probe = async (name, path) => {
+              try {
+                const response = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                  signal: AbortSignal.timeout(15000),
+                  redirect: 'error',
+                });
+                const body = await response.json();
+                const success = response.ok && body.success === true;
+                const errors = Array.isArray(body.errors)
+                  ? body.errors.map(error => error.code).filter(Number.isInteger)
+                  : [];
+                const status = ['active', 'disabled', 'expired'].includes(body.result?.status)
+                  ? body.result.status : undefined;
+                core.info(JSON.stringify({ probe: name, http: response.status, success, status, errors }));
+                return success;
+              } catch {
+                core.info(JSON.stringify({ probe: name, success: false, error: 'request_failed' }));
+                return false;
+              }
+            };
+            const accountPath = `/accounts/${encodeURIComponent(accountId)}`;
+            if (!await probe('user_token_verify', '/user/tokens/verify')) {
+              await probe('account_token_verify', `${accountPath}/tokens/verify`);
+            }
+            const workers = await probe('workers_account_access', `${accountPath}/workers/subdomain`);
+            const stores = await probe('secrets_store_access', `${accountPath}/secrets_store/stores`);
+            if (!workers || !stores) {
+              core.setFailed('Cloudflare API access failed. Check the probe statuses and error codes.');
+            }
       - name: Deploy
         run: pnpm --filter @acta/infra exec alchemy deploy --stage "$STAGE" --yes
