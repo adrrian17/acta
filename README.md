@@ -107,7 +107,7 @@ cd packages/infra && pnpm run deploy --stage live_adrrian17
 
 ### Production origins
 
-- Required after the first deploy: set `CORS_ORIGIN` in the `github-actions` item in the vault selected by the production GitHub Environment's `OP_VAULT_ID`, then deploy the server again.
+- Before the first deploy, set `CORS_ORIGIN` in the `github-actions` item in the vault selected by the production GitHub Environment's `OP_VAULT_ID`. If the final URL is not known yet, set the planned origin, then update it and redeploy the server after deployment.
 
 ## Git Hooks and Formatting
 

@@ -30,6 +30,7 @@ jobs:
           install: false
           cache: true
       - run: pnpm install --frozen-lockfile --prod=false
+      - run: pnpm --filter web build
       - run: pnpm check
       - run: pnpm test
 
