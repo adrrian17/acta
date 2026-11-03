@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+env:
+  STAGE: ${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
+  INFISICAL_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
+  VARLOCK_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+  NODE_ENV: production
+
+jobs:
+  deploy:
+    # Fork PRs get no OIDC token and no Infisical access, so they never deploy.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    # Job-level so skipped fork PRs never queue behind or replace a real deploy.
+    concurrency:
+      group: deploy-${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+      - name: Load secrets from Infisical
+        uses: Infisical/secrets-action@v1.0.9
+        with:
+          method: oidc
+          identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
+          project-slug: ${{ vars.INFISICAL_PROJECT_SLUG }}
+          env-slug: ${{ env.INFISICAL_ENV }}
+          oidc-audience: https://github.com/${{ github.repository_owner }}
+          export-type: env
+      - run: pnpm install --frozen-lockfile --prod=false
+      - name: Deploy
+        run: pnpm --filter @acta/infra exec alchemy deploy --stage "$STAGE" --yes

@@ -4,6 +4,8 @@ import { Stack } from "alchemy";
 import { Config, Effect } from "effect";
 import "varlock/auto-load";
 
+import { webName, webOrigin } from "./web-origin";
+
 export const db = D1.Database("database", {
   migrations: "../../packages/db/src/migrations",
 });
@@ -17,7 +19,7 @@ export const server = Worker("server", {
   crons: ["0 3 * * *"],
   env: {
     DB: db,
-    CORS_ORIGIN: Config.String("CORS_ORIGIN"),
+    CORS_ORIGIN: webOrigin,
     BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
     BETTER_AUTH_URL: Worker.URL,
     GITHUB_CLIENT_ID: Config.String("GITHUB_CLIENT_ID"),
@@ -41,6 +43,7 @@ export default Stack(
     const serverWorker = yield* server;
 
     const webWorker = yield* Website.Vite("web", {
+      name: webName,
       rootDir: "../../apps/web",
       assets: {
         htmlHandling: "auto-trailing-slash",

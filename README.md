@@ -75,7 +75,7 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 
 ## Environment Configuration
 
-Every variable is declared once in the root `.env.schema`, and its values live in the root `.env`. Each package's `.env.schema` imports the root with a `pick` list of only the items it needs, so the web app never sees server secrets. Varlock generates `src/env.ts` during installation; run `pnpm run env:generate` after changing a schema. Commit schemas, and keep secrets in the ignored root `.env` or your deployment platform.
+Every variable is declared once in the root `.env.schema`, and its values live in the root `.env`. Each package's `.env.schema` imports the root with a `pick` list of only the items it needs, so the web app never sees server secrets. Varlock generates `src/env.ts` during installation; run `pnpm run env:generate` after changing a schema. Commit schemas. Locally every item has an inert placeholder, so `pnpm dev` starts with no `.env`; put real values (for example GitHub OAuth credentials) in the ignored root `.env` to override them. Deployments get real values from Infisical inside the GitHub workflow only; see [docs/ci-setup.md](docs/ci-setup.md).
 
 Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
 
