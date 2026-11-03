@@ -41,9 +41,10 @@ export default Stack(
   },
   Effect.gen(function* stack() {
     const serverWorker = yield* server;
+    const name = yield* webName;
 
     const webWorker = yield* Website.Vite("web", {
-      name: webName,
+      name,
       rootDir: "../../apps/web",
       assets: {
         htmlHandling: "auto-trailing-slash",
