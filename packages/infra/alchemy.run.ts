@@ -19,6 +19,8 @@ export const server = Worker(
     return {
       name,
       domain,
+      // A custom domain replaces workers.dev; stages without one still need it.
+      workersDev: !domain,
       main: "../../apps/server/src/index.ts",
       compatibility: {
         flags: ["nodejs_compat"],
@@ -57,6 +59,7 @@ export default Stack(
     const webWorker = yield* Website.Vite("web", {
       name,
       domain,
+      workersDev: !domain,
       rootDir: "../../apps/web",
       assets: {
         htmlHandling: "auto-trailing-slash",

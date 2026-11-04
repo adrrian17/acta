@@ -83,6 +83,7 @@ test.each([
       expect.objectContaining({
         name: `acta-server-${nameStage}`,
         domain: isProd ? "acta-api.adrianayala.mx" : undefined,
+        workersDev: !isProd,
       })
     );
     expect(boundary.website).toHaveBeenCalledExactlyOnceWith(
@@ -90,6 +91,7 @@ test.each([
       expect.objectContaining({
         name: `acta-web-${nameStage}`,
         domain: isProd ? "acta.adrianayala.mx" : undefined,
+        workersDev: !isProd,
       })
     );
   }

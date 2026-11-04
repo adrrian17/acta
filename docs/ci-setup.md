@@ -33,7 +33,7 @@ All same-repository pull requests share the fixed `preview` stage, so the previe
 
 Changing an existing frontend from Alchemy's generated name to this explicit name changes its public URL. Review the resource replacement before applying this change to an existing installation. Changing an existing server from its generated name to `acta-server-<stage>` replaces that Worker and changes its public URL once. Update the corresponding GitHub OAuth app callback after the rename. The D1 `database` resource and its binding remain unchanged, so this replacement does not delete the database. Keep the same stage and state store, and review the deployment plan for the Worker replacement before applying it.
 
-The `prod` stage also serves on custom domains: `acta.adrianayala.mx` (web) and `acta-api.adrianayala.mx` (server). They are declared in `packages/infra/web-origin.ts`. The `adrianayala.mx` zone must exist in the Cloudflare account, and the API token needs DNS edit and zone read access on it. Alchemy creates the DNS records and certificates. Other stages stay on `workers.dev`. The `workers.dev` URLs of the production Workers keep responding unless disabled.
+The `prod` stage also serves on custom domains: `acta.adrianayala.mx` (web) and `acta-api.adrianayala.mx` (server). They are declared in `packages/infra/web-origin.ts`. The `adrianayala.mx` zone must exist in the Cloudflare account, and the API token needs DNS edit and zone read access on it. Alchemy creates the DNS records and certificates. Other stages stay on `workers.dev`. The production Workers have `workers.dev` disabled, including version preview URLs, so they answer only on the custom domains.
 
 ## Persistent state and the shared preview
 
