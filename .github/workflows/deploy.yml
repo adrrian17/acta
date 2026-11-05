@@ -10,6 +10,8 @@ jobs:
   # No secrets, so it also runs on fork PRs. Env validation uses the inert local defaults from .env.schema.
   quality:
     runs-on: ubuntu-latest
+    env:
+      VARLOCK_ENV: test
     permissions:
       contents: read
     concurrency:

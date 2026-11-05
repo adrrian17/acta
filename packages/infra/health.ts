@@ -29,7 +29,9 @@ const target = await Effect.all({
   Effect.runPromise
 );
 
-console.log(`Checking ${target.webOrigin} and ${target.serverOrigin}`);
+process.stdout.write(
+  `Checking ${target.webOrigin} and ${target.serverOrigin}\n`
+);
 
 const attempt = await waitUntilHealthy(target, {
   attempts: ATTEMPTS,
@@ -37,4 +39,4 @@ const attempt = await waitUntilHealthy(target, {
   requestTimeoutMs: REQUEST_TIMEOUT_MS,
 });
 
-console.log(`Healthy on attempt ${attempt}`);
+process.stdout.write(`Healthy on attempt ${attempt}\n`);
