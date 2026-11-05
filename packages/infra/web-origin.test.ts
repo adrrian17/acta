@@ -3,7 +3,7 @@ import { Stage } from "alchemy/Stage";
 import { ConfigProvider, Effect } from "effect";
 import { expect, test } from "vite-plus/test";
 
-import { webName, webOrigin } from "./web-origin";
+import { serverOrigin, webName, webOrigin } from "./web-origin";
 
 const resolveWeb = async (stage: string, dev: boolean) =>
   await Effect.all({ name: webName, origin: webOrigin }).pipe(
@@ -47,4 +47,22 @@ test("the default personal stage uses a valid frontend name and matching origin"
     name: "acta-web-live-adrrian17",
     origin: "https://acta-web-live-adrrian17.example.workers.dev",
   });
+});
+
+const resolveServer = async (stage: string) =>
+  await serverOrigin.pipe(
+    Effect.provideService(Stage, stage),
+    Effect.provide(
+      ConfigProvider.layer(
+        ConfigProvider.fromUnknown({ CLOUDFLARE_WORKERS_SUBDOMAIN: "example" })
+      )
+    ),
+    Effect.runPromise
+  );
+
+test("the server origin follows the same stage naming as the deployed Worker", async () => {
+  expect(await resolveServer("preview")).toBe(
+    "https://acta-server-preview.example.workers.dev"
+  );
+  expect(await resolveServer("prod")).toBe("https://acta-api.adrianayala.mx");
 });

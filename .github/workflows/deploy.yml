@@ -6,16 +6,32 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
-env:
-  STAGE: ${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
-  VARLOCK_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
-  NODE_ENV: production
-
 jobs:
+  # No secrets, so it also runs on fork PRs. Env validation uses the inert local defaults from .env.schema.
+  quality:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: quality-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --prod=false
+      - run: pnpm check
+      - run: pnpm test
+
   deploy:
+    needs: quality
     # Fork PRs get no OIDC token and no Infisical access, so they never deploy.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     # Job-level so skipped fork PRs never queue behind or replace a real deploy.
+    # The health check runs inside this job so the shared preview cannot be replaced before it is verified.
     concurrency:
       group: deploy-${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
       cancel-in-progress: false
@@ -23,17 +39,21 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    env:
+      STAGE: ${{ github.event_name == 'pull_request' && 'preview' || 'prod' }}
+      VARLOCK_ENV: ${{ github.event_name == 'pull_request' && 'preview' || 'production' }}
+      NODE_ENV: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: "24"
           cache: pnpm
       # Separate steps so a missing preview variable never falls back to the production identity.
       - name: Load preview secrets from Infisical
         if: github.event_name == 'pull_request'
-        uses: Infisical/secrets-action@v1.0.9
+        uses: Infisical/secrets-action@8a06c1bdcd5b8635d510c52d4b57a92c1ccef785 # v1.0.9
         with:
           method: oidc
           identity-id: ${{ vars.INFISICAL_PREVIEW_IDENTITY_ID }}
@@ -43,7 +63,7 @@ jobs:
           export-type: env
       - name: Load production secrets from Infisical
         if: github.event_name == 'push'
-        uses: Infisical/secrets-action@v1.0.9
+        uses: Infisical/secrets-action@8a06c1bdcd5b8635d510c52d4b57a92c1ccef785 # v1.0.9
         with:
           method: oidc
           identity-id: ${{ vars.INFISICAL_PRODUCTION_IDENTITY_ID }}
@@ -54,3 +74,5 @@ jobs:
       - run: pnpm install --frozen-lockfile --prod=false
       - name: Deploy
         run: pnpm --filter @acta/infra exec alchemy deploy --stage "$STAGE" --yes
+      - name: Verify deployment health
+        run: pnpm --filter @acta/infra exec node health.ts "$STAGE"
