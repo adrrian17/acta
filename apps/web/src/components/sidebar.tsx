@@ -81,7 +81,12 @@ function SidebarContent() {
                     }
                   : undefined
               }
-              className="group text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:border-primary/60 relative flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm"
+              className={cn(
+                "group text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:text-accent-foreground relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
+                // An open Tasks group highlights the active view instead of its parent.
+                !(to === "/tasks" && tasksOpen) &&
+                  "data-[status=active]:bg-accent"
+              )}
             >
               <Icon aria-hidden className="size-5" strokeWidth={1.75} />
               <span className="flex-1">{label}</span>
@@ -203,12 +208,11 @@ export function TopBar() {
           <SidebarContent />
         </SheetContent>
       </Sheet>
-      <span aria-hidden className="text-muted-foreground max-lg:hidden">
-        /
-      </span>
-      <h1 className="text-sm font-semibold">
+      <h1 className="min-w-0 truncate text-sm font-semibold">
         {title}
         {taskView && ` • ${taskView.label}`}
+        {pathname === "/" && search.tag !== undefined && ` • #${search.tag}`}
+        {pathname === "/" && search.untagged === true && ` • ${COPY.untagged}`}
       </h1>
     </header>
   );

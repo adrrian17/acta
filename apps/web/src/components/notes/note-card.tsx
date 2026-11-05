@@ -1,4 +1,5 @@
 import type { Note } from "@acta/api/notes/note";
+import { deleteTag } from "@acta/api/notes/tags";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,16 @@ function onError(error: { message: string; data?: { code?: string } | null }) {
   }
 
   toast.error(error.message);
+}
+
+function withoutTags(note: Note): string {
+  let text = note.content;
+
+  for (const tag of note.tags) {
+    text = deleteTag(text, tag);
+  }
+
+  return text;
 }
 
 export function NoteCard({ note }: { note: Note }) {
@@ -164,9 +175,9 @@ export function NoteCard({ note }: { note: Note }) {
   }
 
   return (
-    <Card>
+    <Card size="sm">
       <CardContent>
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <time
               dateTime={new Date(note.createdAt).toISOString()}
@@ -183,7 +194,8 @@ export function NoteCard({ note }: { note: Note }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="ml-auto"
+                    // Negative margins keep the 32px target without padding the row.
+                    className="-my-1.5 -mr-2 ml-auto"
                     aria-label={COPY.noteActions}
                   />
                 }
@@ -265,7 +277,8 @@ export function NoteCard({ note }: { note: Note }) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <NotePreview content={note.content} />
+          {/* Tags render as the chips below, so the card hides them from the text. */}
+          <NotePreview content={withoutTags(note)} />
           {note.purgeAt !== null && (
             <p className="text-muted-foreground text-xs">
               {COPY.purgeAt(new Date(note.purgeAt).toLocaleDateString())}
@@ -278,7 +291,7 @@ export function NoteCard({ note }: { note: Note }) {
                   <Link
                     to="/"
                     search={{ tag }}
-                    className="bg-accent text-accent-foreground hover:bg-accent/70 rounded-full px-2 py-0.5 text-xs"
+                    className="bg-accent text-accent-foreground hover:bg-accent/70 relative rounded-full px-2 py-0.5 text-xs after:absolute after:inset-x-0 after:-inset-y-2.5"
                   >
                     #{tag}
                   </Link>

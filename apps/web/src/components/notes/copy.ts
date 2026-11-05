@@ -47,6 +47,8 @@ export const COPY = {
   tagsResult: (changed: number, skipped: number) =>
     `Updated ${changed} notes. ${skipped} skipped because they would end up empty or too long.`,
   emptyTitle: "Nothing here yet",
+  loadError: "Couldn't load your notes.",
+  retry: "Try again",
   emptyTimeline: "No notes yet. Write your first one above.",
   emptyArchive: "No archived notes.",
   emptyTrash: "Trash is empty. Notes here are deleted after 30 days.",

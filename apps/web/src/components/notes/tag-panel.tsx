@@ -177,7 +177,7 @@ function FilterRow({
       className={cn(
         // A border, not a ring: the scrolling sidebar clips anything drawn outside the box.
         "group hover:bg-muted flex items-center gap-1 rounded-md border border-transparent pr-1 transition-colors",
-        isActive && "bg-accent hover:bg-accent border-primary/60"
+        isActive && "bg-accent hover:bg-accent"
       )}
       data-active={isActive}
     >

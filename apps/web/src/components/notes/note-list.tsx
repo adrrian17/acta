@@ -37,6 +37,24 @@ export function NoteList({ view, emptyText, tag, untagged }: NoteListProps) {
     return <Loader />;
   }
 
+  if (query.isError && query.data === undefined) {
+    return (
+      <Empty className="my-12">
+        <EmptyHeader>
+          <EmptyTitle>{COPY.loadError}</EmptyTitle>
+        </EmptyHeader>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void query.refetch();
+          }}
+        >
+          {COPY.retry}
+        </Button>
+      </Empty>
+    );
+  }
+
   const notes = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   if (notes.length === 0) {

@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from "@acta/ui/components/popover";
 import { Textarea } from "@acta/ui/components/textarea";
-import { CalendarIcon, Save, X } from "lucide-react";
+import { ArrowUp, CalendarIcon, X } from "lucide-react";
 import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
@@ -179,7 +179,7 @@ export function TaskForm({
             className="ml-auto"
             disabled={saving || error !== null}
           >
-            <Save aria-hidden />
+            <ArrowUp aria-hidden />
           </Button>
         )}
       </div>
