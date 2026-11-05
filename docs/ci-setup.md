@@ -18,6 +18,23 @@ Infisical is used only by `.github/workflows/deploy.yml`. Local development uses
 
 Do not store `STAGE`, `CI`, `NODE_ENV`, `VARLOCK_ENV`, or other runner control variables in that Infisical path. The action exports every secret there to subsequent steps. Do not add `CORS_ORIGIN`, `BETTER_AUTH_URL`, or `VITE_SERVER_URL` for deployment. Alchemy derives these URLs.
 
+## Workflow shape
+
+The workflow runs `quality`, then `deploy`. `quality` builds the web app to generate route types before running `pnpm check` and `pnpm test`. The type-aware linter needs these generated types on a fresh checkout. The job runs with no secrets, on every pull request including forks, and on pushes to `main`. It sets `VARLOCK_ENV=test` to use the inert defaults from `.env.schema`, overriding Varlock's environment inference from GitHub branch metadata. `deploy` declares `needs: quality`, so a failing check or test blocks the deploy.
+
+The last step of `deploy` runs `packages/infra/health.ts`. It checks that the frontend answers with a 2xx status and that the server's `/trpc/healthCheck` returns `{"result":{"data":"OK"}}`. It makes up to 12 attempts, 10 seconds apart, each request limited to 10 seconds, then fails the job. This shows both Workers are reachable and the server runs the deployed router. It does not exercise D1 or auth.
+
+The script derives both URLs from the stage with the same helpers the deploy uses (`packages/infra/web-origin.ts`), because Alchemy 2.0.0-beta.84 prints deploy outputs only as human-formatted text, with no JSON or step-output mode. It runs inside `deploy`, not as a separate job, because it needs `CLOUDFLARE_WORKERS_SUBDOMAIN` from Infisical and because the job's concurrency group keeps the next deploy from replacing the shared preview before it is verified.
+
+Every `uses:` reference is pinned to a full commit SHA, with the release it matches in a trailing comment. A bump should update the SHA and the comment together. To re-resolve a pin, run `git ls-remote https://github.com/<owner>/<repo>.git "refs/tags/<tag>" "refs/tags/<tag>^{}"` and use the `^{}` line when the tag is annotated.
+
+| Action | Version | Commit |
+| --- | --- | --- |
+| `actions/checkout` | v4.4.0 | `11d5960a326750d5838078e36cf38b85af677262` |
+| `pnpm/action-setup` | v4.3.0 | `b906affcce14559ad1aafd4ab0e942779e9f58b1` |
+| `actions/setup-node` | v4.4.0 | `49933ea5288caeca8642d1e84afbd3f7d6820020` |
+| `Infisical/secrets-action` | v1.0.9 | `8a06c1bdcd5b8635d510c52d4b57a92c1ccef785` |
+
 ## Deployment behavior
 
 | Trigger                      | Alchemy stage | Infisical slug | VARLOCK_ENV  |
@@ -27,7 +44,7 @@ Do not store `STAGE`, `CI`, `NODE_ENV`, `VARLOCK_ENV`, or other runner control v
 
 The workflow sets `NODE_ENV=production` for both environments. Varlock 1.23 also infers environments from GitHub branch metadata, but the explicit flag ties validation to the deployment event. Missing required deployment values fail validation. Process env overrides schema defaults. No Infisical plugin or credentials are needed locally.
 
-Fork pull requests skip the deploy job. Same-repository PR code runs with preview credentials, so only trusted contributors may create those branches. Preview jobs use the preview identity, whose subject is `pull_request` only, so they cannot obtain the production identity's token grant.
+Fork pull requests run `quality` and skip the deploy job. Same-repository PR code runs with preview credentials, so only trusted contributors may create those branches. Preview jobs use the preview identity, whose subject is `pull_request` only, so they cannot obtain the production identity's token grant.
 
 All same-repository pull requests share the fixed `preview` stage, so the preview URLs never change between PRs. The frontend Worker has an explicit name `acta-web-<stage>`. Its URL is `https://acta-web-<stage>.<subdomain>.workers.dev`. The server Worker also has an explicit name `acta-server-<stage>`, with URL `https://acta-server-<stage>.<workers-subdomain>.workers.dev`. Preview uses `acta-server-preview`, and production uses `acta-server-prod`. The server receives that exact frontend origin for CORS and Better Auth's trusted origins. `BETTER_AUTH_URL` uses Alchemy's `Worker.URL`, and the frontend receives the deployed server URL through `VITE_SERVER_URL`. Local Alchemy dev uses `http://localhost:3001` for the frontend origin.
 

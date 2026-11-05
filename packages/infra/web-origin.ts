@@ -23,19 +23,28 @@ export const customDomain = (service: keyof typeof PRODUCTION_DOMAINS) =>
     )
   );
 
-export const webOrigin = Effect.gen(function* webOrigin() {
-  if ((yield* AlchemyContext).dev) {
-    return "http://localhost:3001";
-  }
-
-  const domain = yield* customDomain("web");
+const deployedOrigin = Effect.fn(function* deployedOrigin(
+  service: keyof typeof PRODUCTION_DOMAINS
+) {
+  const domain = yield* customDomain(service);
 
   if (domain) {
     return `https://${domain}`;
   }
 
-  const name = yield* webName;
+  const name = yield* workerName(service);
   const subdomain = yield* Config.String("CLOUDFLARE_WORKERS_SUBDOMAIN");
 
   return `https://${name}.${subdomain}.workers.dev`;
 });
+
+export const webOrigin = Effect.gen(function* webOrigin() {
+  if ((yield* AlchemyContext).dev) {
+    return "http://localhost:3001";
+  }
+
+  return yield* deployedOrigin("web");
+});
+
+// The public URL a deployed stage serves the server on; used by the post-deploy health check.
+export const serverOrigin = deployedOrigin("server");

@@ -1,4 +1,8 @@
 {
   "extends": "@acta/config/tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
   "include": ["*.ts"]
 }
