@@ -22,9 +22,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       workbox: { globPatterns: ["**/*.{js,css,html,png,svg,ico}"] },
       manifest: {
-        name: "acta",
-        short_name: "acta",
-        description: "acta - PWA Application",
+        name: "Acta",
+        short_name: "Acta",
+        description: "Acta",
         theme_color: "#0c0c0c",
       },
       pwaAssets: { disabled: false, config: true },
