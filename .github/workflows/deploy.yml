@@ -25,6 +25,8 @@ jobs:
           node-version: "24"
           cache: pnpm
       - run: pnpm install --frozen-lockfile --prod=false
+      - name: Generate route types with the web build
+        run: pnpm --filter web build
       - run: pnpm check
       - run: pnpm test
 

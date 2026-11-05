@@ -20,7 +20,7 @@ Do not store `STAGE`, `CI`, `NODE_ENV`, `VARLOCK_ENV`, or other runner control v
 
 ## Workflow shape
 
-The workflow runs `quality`, then `deploy`. `quality` runs `pnpm check` and `pnpm test` with no secrets, on every pull request including forks, and on pushes to `main`. It sets `VARLOCK_ENV=test` to use the inert defaults from `.env.schema`, overriding Varlock's environment inference from GitHub branch metadata. `deploy` declares `needs: quality`, so a failing check or test blocks the deploy.
+The workflow runs `quality`, then `deploy`. `quality` builds the web app to generate route types before running `pnpm check` and `pnpm test`. The type-aware linter needs these generated types on a fresh checkout. The job runs with no secrets, on every pull request including forks, and on pushes to `main`. It sets `VARLOCK_ENV=test` to use the inert defaults from `.env.schema`, overriding Varlock's environment inference from GitHub branch metadata. `deploy` declares `needs: quality`, so a failing check or test blocks the deploy.
 
 The last step of `deploy` runs `packages/infra/health.ts`. It checks that the frontend answers with a 2xx status and that the server's `/trpc/healthCheck` returns `{"result":{"data":"OK"}}`. It makes up to 12 attempts, 10 seconds apart, each request limited to 10 seconds, then fails the job. This shows both Workers are reachable and the server runs the deployed router. It does not exercise D1 or auth.
 
