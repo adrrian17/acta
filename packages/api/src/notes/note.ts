@@ -1,6 +1,6 @@
 import type { note, noteTag } from "@acta/db/schema/notes";
 
-import { purgeAt } from "./lifecycle";
+import { purgeAt } from "../trash";
 import type { NoteState } from "./lifecycle";
 
 export interface Note {
@@ -16,7 +16,7 @@ export interface Note {
   purgeAt: number | null;
 }
 
-export type NoteRow = typeof note.$inferSelect & {
+type NoteRow = typeof note.$inferSelect & {
   tags: Pick<typeof noteTag.$inferSelect, "tag">[];
 };
 

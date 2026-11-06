@@ -4,13 +4,7 @@ import type { Context as HonoContext } from "hono";
 import { ENV } from "./env.server";
 import { getDb, createAuth } from "./services";
 
-export interface CreateContextOptions {
-  context: HonoContext;
-}
-
-export async function createContext({
-  context,
-}: CreateContextOptions): Promise<ApiContext> {
+export async function createContext(context: HonoContext): Promise<ApiContext> {
   const db = getDb();
 
   const session = await createAuth(db).api.getSession({
@@ -23,5 +17,3 @@ export async function createContext({
     ownerGithubId: ENV.OWNER_GITHUB_ID,
   };
 }
-
-export type Context = Awaited<ReturnType<typeof createContext>>;

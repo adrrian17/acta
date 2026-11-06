@@ -1,41 +1,16 @@
+import { noteContent } from "@acta/api/notes/content";
 import { Button } from "@acta/ui/components/button";
 import { Label } from "@acta/ui/components/label";
 import { Textarea } from "@acta/ui/components/textarea";
 import { ArrowUp, Eye, Hash, List, Loader2 } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
-import { COPY } from "./copy";
+import { COPY } from "@/components/copy";
+import { textError } from "@/components/text-error";
+
+import { NOTE_COPY } from "./copy";
 import { insertText } from "./insert-text";
 import { NotePreview } from "./note-preview";
-
-// Mirrors the server's content rules (NOTE_MAX_CHARS in @acta/api) so Save can explain itself.
-const NOTE_MAX_CHARS = 100_000;
-
-function contentError(content: string): "empty" | "tooLong" | null {
-  if (content.trim() === "") {
-    return "empty";
-  }
-
-  // oxlint-disable-next-line typescript/no-misused-spread -- the limit counts code points, which is exactly what spreading yields
-  return [...content].length > NOTE_MAX_CHARS ? "tooLong" : null;
-}
-
-// An empty composer is the normal starting point; only explain "empty" once there was text.
-function errorMessage(
-  error: ReturnType<typeof contentError>,
-  content: string,
-  initialContent: string
-): string | null {
-  if (error === "tooLong") {
-    return COPY.errorTooLong;
-  }
-
-  if (error === "empty" && (content !== "" || initialContent !== "")) {
-    return COPY.errorEmpty;
-  }
-
-  return null;
-}
 
 interface NoteEditorProps {
   label: string;
@@ -57,9 +32,11 @@ export function NoteEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaId = useId();
   const errorId = useId();
-  const error = contentError(content);
 
-  const message = errorMessage(error, content, initialContent);
+  const { invalid, message } = textError(noteContent, content, initialContent, {
+    empty: NOTE_COPY.errorEmpty,
+    tooLong: NOTE_COPY.errorTooLong,
+  });
 
   // Edits to an existing note keep Save and Cancel; the composer sends.
   const composing = onCancel === undefined;
@@ -87,7 +64,7 @@ export function NoteEditor({
   };
 
   const save = () => {
-    if (!saving && error === null) {
+    if (!saving && !invalid) {
       onSave(content);
     }
   };
@@ -114,7 +91,7 @@ export function NoteEditor({
               id={textareaId}
               ref={textareaRef}
               value={content}
-              placeholder={COPY.composerPlaceholder}
+              placeholder={NOTE_COPY.composerPlaceholder}
               aria-invalid={message !== null}
               aria-describedby={message === null ? undefined : errorId}
               variant="bare"
@@ -147,8 +124,8 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={COPY.insertTag}
-            title={COPY.insertTag}
+            aria-label={NOTE_COPY.insertTag}
+            title={NOTE_COPY.insertTag}
             disabled={previewing}
             onClick={() => {
               insert("#", false);
@@ -160,8 +137,8 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={COPY.insertList}
-            title={COPY.insertList}
+            aria-label={NOTE_COPY.insertList}
+            title={NOTE_COPY.insertList}
             disabled={previewing}
             onClick={() => {
               insert("- ", true);
@@ -174,8 +151,8 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={COPY.preview}
-            title={COPY.preview}
+            aria-label={NOTE_COPY.preview}
+            title={NOTE_COPY.preview}
             aria-pressed={previewing}
             onClick={() => {
               setPreviewing((shown) => !shown);
@@ -190,7 +167,7 @@ export function NoteEditor({
             size="icon-sm"
             aria-label={COPY.send}
             title={COPY.send}
-            disabled={saving || error !== null}
+            disabled={saving || invalid}
           >
             {saving ? (
               <Loader2 aria-hidden className="motion-safe:animate-spin" />
@@ -203,7 +180,7 @@ export function NoteEditor({
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
               {COPY.cancel}
             </Button>
-            <Button type="submit" size="sm" disabled={saving || error !== null}>
+            <Button type="submit" size="sm" disabled={saving || invalid}>
               {saving && (
                 <Loader2 aria-hidden className="motion-safe:animate-spin" />
               )}

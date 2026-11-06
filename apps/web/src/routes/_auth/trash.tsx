@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { COPY } from "@/components/notes/copy";
+import { NOTE_COPY } from "@/components/notes/copy";
 import { NoteList } from "@/components/notes/note-list";
 
 export const Route = createFileRoute("/_auth/trash")({
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_auth/trash")({
 function TrashRoute() {
   return (
     <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
-      <NoteList view="trashed" empty={COPY.emptyTrash} />
+      <NoteList view="trashed" empty={NOTE_COPY.emptyTrash} />
     </main>
   );
 }

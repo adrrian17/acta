@@ -15,7 +15,6 @@ function snapshot() {
   return Math.floor(Date.now() / MINUTE) * MINUTE;
 }
 
-/** The current time, refreshed every minute. */
 export function useNow() {
   return useSyncExternalStore(subscribe, snapshot);
 }

@@ -4,8 +4,9 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
 
 import { assertOwnerProfile } from "./owner";
+import { LOGIN_PATH } from "./shared";
 
-export interface AuthConfig {
+interface AuthConfig {
   BETTER_AUTH_URL: string;
   BETTER_AUTH_SECRET: string;
   CORS_ORIGIN: string;
@@ -14,17 +15,13 @@ export interface AuthConfig {
   OWNER_GITHUB_ID: string;
 }
 
-export function createAuth(
-  env: AuthConfig,
-  database: Database,
-  desktopOrigins: readonly string[] = []
-) {
+export function createAuth(env: AuthConfig, database: Database) {
   return betterAuth({
     database: drizzleAdapter(database, {
       provider: "sqlite",
       schema: { account, session, user, verification },
     }),
-    trustedOrigins: [env.CORS_ORIGIN, ...desktopOrigins],
+    trustedOrigins: [env.CORS_ORIGIN],
     socialProviders: {
       github: {
         clientId: env.GITHUB_CLIENT_ID,
@@ -33,7 +30,7 @@ export function createAuth(
           await assertOwnerProfile(
             profile,
             env.OWNER_GITHUB_ID,
-            `${env.CORS_ORIGIN}/login`
+            `${env.CORS_ORIGIN}${LOGIN_PATH}`
           );
 
           return {};
@@ -49,7 +46,6 @@ export function createAuth(
         httpOnly: true,
       },
     },
-    plugins: [],
   });
 }
 

@@ -12,8 +12,7 @@ import { COPY } from "./copy";
 
 interface ConflictDialogProps {
   open: boolean;
-  /** Defaults to the Note copy; Tasks pass their own. */
-  title?: string;
+  title: string;
   pending: boolean;
   /** Closing without a choice keeps the local edit open. */
   onClose: () => void;
@@ -23,7 +22,7 @@ interface ConflictDialogProps {
 
 export function ConflictDialog({
   open,
-  title = COPY.conflictTitle,
+  title,
   pending,
   onClose,
   onReload,

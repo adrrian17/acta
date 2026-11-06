@@ -7,8 +7,8 @@ import {
   vi,
 } from "vite-plus/test";
 
-import { TRASH_RETENTION_MS } from "../notes/lifecycle";
 import { createOwnerCaller } from "../test/caller";
+import { TRASH_RETENTION_MS } from "../trash";
 
 type Caller = Awaited<ReturnType<typeof createOwnerCaller>>["caller"];
 

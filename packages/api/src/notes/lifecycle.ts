@@ -4,16 +4,7 @@ export const NOTE_STATES = note.state.enumValues;
 
 export type NoteState = (typeof NOTE_STATES)[number];
 
-export const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
-
-export const TRANSITIONS = [
-  "archive",
-  "unarchive",
-  "trash",
-  "restore",
-] as const;
-
-export type Transition = (typeof TRANSITIONS)[number];
+export type Transition = "archive" | "unarchive" | "trash" | "restore";
 
 export interface LifecycleFields {
   state: NoteState;
@@ -73,10 +64,9 @@ export function applyTransition(
 }
 
 /** Only Timeline Notes can be Pinned; unpinning is always allowed. */
-export function canSetPinned(state: NoteState, pinned: boolean): boolean {
-  return !pinned || state === "timeline";
-}
-
-export function purgeAt(trashedAt: Date | null): Date | null {
-  return trashedAt && new Date(trashedAt.getTime() + TRASH_RETENTION_MS);
+export function applyPinned(
+  current: LifecycleFields,
+  pinned: boolean
+): Pick<LifecycleFields, "pinned"> | null {
+  return !pinned || current.state === "timeline" ? { pinned } : null;
 }

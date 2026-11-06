@@ -1,13 +1,4 @@
 import type { Task } from "@acta/api/tasks/task";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@acta/ui/components/alert-dialog";
 import { Button } from "@acta/ui/components/button";
 import { Checkbox } from "@acta/ui/components/checkbox";
 import {
@@ -20,10 +11,13 @@ import { cn } from "@acta/ui/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import { Ellipsis } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
-import { ConflictDialog } from "@/components/notes/conflict-dialog";
-import { useNow } from "@/components/notes/use-now";
+import { ConflictDialog } from "@/components/conflict-dialog";
+import { COPY } from "@/components/copy";
+import { DeleteDialog } from "@/components/delete-dialog";
+import { formatDate } from "@/components/format-date";
+import { useNow } from "@/components/use-now";
+import { itemErrorHandler, useEditConflict } from "@/components/versioned-item";
 import { invalidateTasks, queryClient, trpc } from "@/utils/trpc";
 
 import { TASK_COPY } from "./copy";
@@ -31,22 +25,7 @@ import { dueStatus, formatDay, localDay } from "./due-date";
 import { TaskForm } from "./task-form";
 import type { TaskFields } from "./task-form";
 
-// The row is out of date: the Task changed, is gone, or is no longer in that state.
-const STALE_TASK_CODES = new Set([
-  "CONFLICT",
-  "NOT_FOUND",
-  "PRECONDITION_FAILED",
-]);
-
-function onError(error: { message: string; data?: { code?: string } | null }) {
-  const code = error.data?.code;
-
-  if (code !== undefined && STALE_TASK_CODES.has(code)) {
-    void invalidateTasks();
-  }
-
-  toast.error(error.message);
-}
+const onError = itemErrorHandler(invalidateTasks);
 
 function DueLabel({ dueDate }: { dueDate: string }) {
   const today = localDay(useNow());
@@ -74,48 +53,20 @@ export function TaskRow({ task }: { task: Task }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const versioned = { id: task.id, version: task.version };
 
-  // The local edit that lost a version check, kept until Reload or Overwrite.
-  const [conflict, setConflict] = useState<TaskFields | null>(null);
+  const conflict = useEditConflict<TaskFields>(invalidateTasks);
 
   const update = useMutation(
     trpc.tasks.update.mutationOptions({
       onSuccess: async () => {
-        setConflict(null);
+        conflict.clear();
         setEditing(false);
         await invalidateTasks();
       },
       onError: (error, { title, dueDate }) => {
-        if (error.data?.code === "CONFLICT") {
-          setConflict({ title, dueDate });
-
-          return;
-        }
-
-        setConflict(null);
-        onError(error);
+        conflict.onUpdateError(error, { title, dueDate });
       },
     })
   );
-
-  const reload = () => {
-    setConflict(null);
-    setEditing(false);
-    void invalidateTasks();
-  };
-
-  const overwrite = async (fields: TaskFields) => {
-    try {
-      const current = await queryClient.query(
-        trpc.tasks.get.queryOptions({ id: task.id }, { staleTime: 0 })
-      );
-
-      update.mutate({ id: task.id, version: current.version, ...fields });
-    } catch {
-      // The Task is gone; the query cache already reported it. Drop the stale row.
-      setConflict(null);
-      void invalidateTasks();
-    }
-  };
 
   // The row slides out first and the list refetches when that ends, so it never just vanishes.
   const [leaving, setLeaving] = useState(false);
@@ -161,7 +112,7 @@ export function TaskRow({ task }: { task: Task }) {
     return (
       <div className="bg-card focus-within:border-ring/60 rounded-xl border p-3 transition-colors">
         <TaskForm
-          label={TASK_COPY.edit}
+          label={COPY.edit}
           initial={{ title: task.title, dueDate: task.dueDate }}
           saving={update.isPending}
           onSave={(fields) => {
@@ -172,17 +123,29 @@ export function TaskRow({ task }: { task: Task }) {
           }}
         />
         <ConflictDialog
-          open={conflict !== null}
+          open={conflict.fields !== null}
           title={TASK_COPY.conflictTitle}
           pending={update.isPending}
           onClose={() => {
-            setConflict(null);
+            conflict.clear();
           }}
-          onReload={reload}
+          onReload={() => {
+            setEditing(false);
+            conflict.reload();
+          }}
           onOverwrite={() => {
-            if (conflict !== null) {
-              void overwrite(conflict);
-            }
+            void conflict.overwrite(
+              async () => {
+                const current = await queryClient.query(
+                  trpc.tasks.get.queryOptions({ id: task.id }, { staleTime: 0 })
+                );
+
+                return current.version;
+              },
+              (version, fields) => {
+                update.mutate({ id: task.id, version, ...fields });
+              }
+            );
           }}
         />
       </div>
@@ -241,20 +204,12 @@ export function TaskRow({ task }: { task: Task }) {
               )}
               {task.state === "done" && task.doneAt !== null && (
                 <span className="text-muted-foreground shrink-0 text-xs">
-                  {TASK_COPY.doneAt(
-                    new Date(task.doneAt).toLocaleDateString(undefined, {
-                      dateStyle: "medium",
-                    })
-                  )}
+                  {TASK_COPY.doneAt(formatDate(task.doneAt))}
                 </span>
               )}
               {task.purgeAt !== null && (
                 <span className="text-muted-foreground shrink-0 text-xs">
-                  {TASK_COPY.purgeAt(
-                    new Date(task.purgeAt).toLocaleDateString(undefined, {
-                      dateStyle: "medium",
-                    })
-                  )}
+                  {COPY.purgeAt(formatDate(task.purgeAt))}
                 </span>
               )}
             </div>
@@ -279,7 +234,7 @@ export function TaskRow({ task }: { task: Task }) {
                     setEditing(true);
                   }}
                 >
-                  {TASK_COPY.edit}
+                  {COPY.edit}
                 </DropdownMenuItem>
               )}
               {task.state === "trashed" ? (
@@ -290,7 +245,7 @@ export function TaskRow({ task }: { task: Task }) {
                       restore.mutate(versioned);
                     }}
                   >
-                    {TASK_COPY.restore}
+                    {COPY.restore}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     variant="destructive"
@@ -299,7 +254,7 @@ export function TaskRow({ task }: { task: Task }) {
                       setConfirmingDelete(true);
                     }}
                   >
-                    {TASK_COPY.deletePermanently}
+                    {COPY.deletePermanently}
                   </DropdownMenuItem>
                 </>
               ) : (
@@ -309,35 +264,20 @@ export function TaskRow({ task }: { task: Task }) {
                     trash.mutate(versioned);
                   }}
                 >
-                  {TASK_COPY.trash}
+                  {COPY.trash}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          <AlertDialog
+          <DeleteDialog
             open={confirmingDelete}
             onOpenChange={setConfirmingDelete}
-          >
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  {TASK_COPY.deletePermanentlyConfirm}
-                </AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{TASK_COPY.cancel}</AlertDialogCancel>
-                <AlertDialogAction
-                  variant="destructive"
-                  disabled={deletePermanently.isPending}
-                  onClick={() => {
-                    deletePermanently.mutate({ id: task.id });
-                  }}
-                >
-                  {TASK_COPY.deletePermanently}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            title={TASK_COPY.deletePermanentlyConfirm}
+            pending={deletePermanently.isPending}
+            onDelete={() => {
+              deletePermanently.mutate({ id: task.id });
+            }}
+          />
         </div>
       </div>
     </div>

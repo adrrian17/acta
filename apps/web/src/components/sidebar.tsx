@@ -28,7 +28,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Fragment, useState } from "react";
 
-import { COPY } from "@/components/notes/copy";
+import { COPY } from "@/components/copy";
+import { NOTE_COPY } from "@/components/notes/copy";
 import { TagPanel } from "@/components/notes/tag-panel";
 import { TASK_COPY } from "@/components/tasks/copy";
 import UserMenu from "@/components/user-menu";
@@ -38,12 +39,17 @@ const NAV_ITEMS: readonly {
   to: LinkProps["to"];
   label: string;
   icon: LucideIcon;
-  /** The Note view whose count the entry shows; Tasks show none. */
+  /** The Note view whose count the entry shows; Trash and Tasks show none, like the Tasks Trash tab. */
   state?: NoteState;
 }[] = [
-  { to: "/", label: COPY.navTimeline, icon: Inbox, state: "timeline" },
-  { to: "/archive", label: COPY.navArchive, icon: Archive, state: "archived" },
-  { to: "/trash", label: COPY.navTrash, icon: Trash2, state: "trashed" },
+  { to: "/", label: NOTE_COPY.navTimeline, icon: Inbox, state: "timeline" },
+  {
+    to: "/archive",
+    label: NOTE_COPY.navArchive,
+    icon: Archive,
+    state: "archived",
+  },
+  { to: "/trash", label: NOTE_COPY.navTrash, icon: Trash2 },
   { to: "/tasks", label: TASK_COPY.navTasks, icon: ListTodo },
 ];
 
@@ -217,7 +223,9 @@ export function TopBar() {
         {title}
         {taskView && ` • ${taskView.label}`}
         {pathname === "/" && search.tag !== undefined && ` • #${search.tag}`}
-        {pathname === "/" && search.untagged === true && ` • ${COPY.untagged}`}
+        {pathname === "/" &&
+          search.untagged === true &&
+          ` • ${NOTE_COPY.untagged}`}
       </h1>
     </header>
   );

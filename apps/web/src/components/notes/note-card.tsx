@@ -1,13 +1,4 @@
 import type { Note } from "@acta/api/notes/note";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@acta/ui/components/alert-dialog";
 import { Button } from "@acta/ui/components/button";
 import { Card, CardContent } from "@acta/ui/components/card";
 import {
@@ -20,36 +11,23 @@ import { useMutation } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Ellipsis, Pin } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
+import { ConflictDialog } from "@/components/conflict-dialog";
+import { COPY } from "@/components/copy";
+import { DeleteDialog } from "@/components/delete-dialog";
+import { formatDate } from "@/components/format-date";
+import { useNow } from "@/components/use-now";
+import { itemErrorHandler, useEditConflict } from "@/components/versioned-item";
 import { invalidateNotes, queryClient, trpc } from "@/utils/trpc";
 
-import { ConflictDialog } from "./conflict-dialog";
-import { COPY } from "./copy";
+import { NOTE_COPY } from "./copy";
 import { NoteEditor } from "./note-editor";
 import { NotePreview } from "./note-preview";
 import { relativeTime } from "./relative-time";
-import { useNow } from "./use-now";
 import { withoutTags } from "./without-tags";
 
 const onSuccess = invalidateNotes;
-
-// The card is out of date: the Note changed, is gone, or is no longer in that state.
-const STALE_NOTE_CODES = new Set([
-  "CONFLICT",
-  "NOT_FOUND",
-  "PRECONDITION_FAILED",
-]);
-
-function onError(error: { message: string; data?: { code?: string } | null }) {
-  const code = error.data?.code;
-
-  if (code !== undefined && STALE_NOTE_CODES.has(code)) {
-    void invalidateNotes();
-  }
-
-  toast.error(error.message);
-}
+const onError = itemErrorHandler(invalidateNotes);
 
 export function NoteCard({ note }: { note: Note }) {
   const [editing, setEditing] = useState(false);
@@ -58,47 +36,20 @@ export function NoteCard({ note }: { note: Note }) {
   const now = useNow();
   const versioned = { id: note.id, version: note.version };
 
-  // The local edit that lost a version check, kept until Reload or Overwrite.
-  const [conflict, setConflict] = useState<string | null>(null);
+  const conflict = useEditConflict<string>(invalidateNotes);
 
   const update = useMutation(
     trpc.notes.update.mutationOptions({
       onSuccess: async () => {
-        setConflict(null);
+        conflict.clear();
         setEditing(false);
         await invalidateNotes();
       },
-      onError: (error, variables) => {
-        if (error.data?.code === "CONFLICT") {
-          setConflict(variables.content);
-
-          return;
-        }
-
-        onError(error);
+      onError: (error, { content }) => {
+        conflict.onUpdateError(error, content);
       },
     })
   );
-
-  const reload = () => {
-    setConflict(null);
-    setEditing(false);
-    void invalidateNotes();
-  };
-
-  const overwrite = async (content: string) => {
-    try {
-      const current = await queryClient.query(
-        trpc.notes.get.queryOptions({ id: note.id }, { staleTime: 0 })
-      );
-
-      update.mutate({ id: note.id, version: current.version, content });
-    } catch {
-      // The Note is gone; the query cache already reported it. Drop the stale card.
-      setConflict(null);
-      void invalidateNotes();
-    }
-  };
 
   const setPinned = useMutation(
     trpc.notes.setPinned.mutationOptions({ onSuccess, onError })
@@ -138,7 +89,7 @@ export function NoteCard({ note }: { note: Note }) {
     return (
       <div className="bg-card focus-within:border-ring/60 rounded-xl border transition-colors">
         <NoteEditor
-          label={COPY.editorLabel}
+          label={NOTE_COPY.editorLabel}
           initialContent={note.content}
           saving={update.isPending}
           onSave={(content) => {
@@ -149,16 +100,29 @@ export function NoteCard({ note }: { note: Note }) {
           }}
         />
         <ConflictDialog
-          open={conflict !== null}
+          open={conflict.fields !== null}
+          title={NOTE_COPY.conflictTitle}
           pending={update.isPending}
           onClose={() => {
-            setConflict(null);
+            conflict.clear();
           }}
-          onReload={reload}
+          onReload={() => {
+            setEditing(false);
+            conflict.reload();
+          }}
           onOverwrite={() => {
-            if (conflict !== null) {
-              void overwrite(conflict);
-            }
+            void conflict.overwrite(
+              async () => {
+                const current = await queryClient.query(
+                  trpc.notes.get.queryOptions({ id: note.id }, { staleTime: 0 })
+                );
+
+                return current.version;
+              },
+              (version, content) => {
+                update.mutate({ id: note.id, version, content });
+              }
+            );
           }}
         />
       </div>
@@ -177,7 +141,7 @@ export function NoteCard({ note }: { note: Note }) {
               {relativeTime(note.createdAt, now)}
             </time>
             {note.pinned && (
-              <Pin aria-label={COPY.pinned} className="size-3.5" />
+              <Pin aria-label={NOTE_COPY.pinned} className="size-3.5" />
             )}
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -187,7 +151,7 @@ export function NoteCard({ note }: { note: Note }) {
                     size="icon-sm"
                     // Negative margins keep the 32px target without padding the row.
                     className="-my-1.5 -mr-2 ml-auto"
-                    aria-label={COPY.noteActions}
+                    aria-label={NOTE_COPY.noteActions}
                   />
                 }
               >
@@ -213,7 +177,7 @@ export function NoteCard({ note }: { note: Note }) {
                         });
                       }}
                     >
-                      {note.pinned ? COPY.unpin : COPY.pin}
+                      {note.pinned ? NOTE_COPY.unpin : NOTE_COPY.pin}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       disabled={busy}
@@ -221,7 +185,7 @@ export function NoteCard({ note }: { note: Note }) {
                         archive.mutate(versioned);
                       }}
                     >
-                      {COPY.archive}
+                      {NOTE_COPY.archive}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -232,7 +196,7 @@ export function NoteCard({ note }: { note: Note }) {
                       unarchive.mutate(versioned);
                     }}
                   >
-                    {COPY.unarchive}
+                    {NOTE_COPY.unarchive}
                   </DropdownMenuItem>
                 )}
                 {note.state === "trashed" ? (
@@ -272,11 +236,7 @@ export function NoteCard({ note }: { note: Note }) {
           {body.children.length > 0 && <NotePreview content={body} />}
           {note.purgeAt !== null && (
             <p className="text-muted-foreground text-xs">
-              {COPY.purgeAt(
-                new Date(note.purgeAt).toLocaleDateString(undefined, {
-                  dateStyle: "medium",
-                })
-              )}
+              {COPY.purgeAt(formatDate(note.purgeAt))}
             </p>
           )}
           {note.tags.length > 0 && (
@@ -297,25 +257,15 @@ export function NoteCard({ note }: { note: Note }) {
           )}
         </div>
       </CardContent>
-      <AlertDialog open={confirmingDelete} onOpenChange={setConfirmingDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{COPY.deletePermanentlyConfirm}</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{COPY.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deletePermanently.isPending}
-              onClick={() => {
-                deletePermanently.mutate({ id: note.id });
-              }}
-            >
-              {COPY.deletePermanently}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        title={NOTE_COPY.deletePermanentlyConfirm}
+        pending={deletePermanently.isPending}
+        onDelete={() => {
+          deletePermanently.mutate({ id: note.id });
+        }}
+      />
     </Card>
   );
 }

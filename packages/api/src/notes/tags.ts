@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /** A `#tag` token found in a Note's text. `start` is the `#`, `end` is exclusive. */
 interface TagToken {
   start: number;
@@ -20,10 +22,15 @@ const LINK_DESTINATION = /(?<=\])\([^)]*\)/gu;
 // Masking from `://` is enough: a scheme cannot contain `#`.
 const URL = /(?<=[\da-z]):\/\/\S+/giu;
 
-const TAG_TOKEN =
-  /(?<=^|[\s([])#(?<raw>[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*)/gu;
+// One or more `/`-separated segments of letters, marks, digits, `_` and `-`.
+const TAG_BODY = String.raw`[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*`;
 
-const TAG = /^[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*$/u;
+const TAG_TOKEN = new RegExp(
+  String.raw`(?<=^|[\s([])#(?<raw>${TAG_BODY})`,
+  "gu"
+);
+
+const TAG = new RegExp(`^${TAG_BODY}$`, "u");
 const LETTER = /\p{L}/u;
 const HORIZONTAL_SPACE = /[ \t]/u;
 const PUNCTUATION = /[,.;:!?]/u;
@@ -122,6 +129,12 @@ function scanTags(text: string): TagToken[] {
 export function isValidTag(tag: string): boolean {
   return TAG.test(tag) && LETTER.test(tag) && normalizeTag(tag) === tag;
 }
+
+/** A Tag from the client: normalized, then checked. */
+export const tagInput = z
+  .string()
+  .transform(normalizeTag)
+  .refine(isValidTag, { error: "Invalid tag" });
 
 /** True when `tag` is `ancestor` or one of its descendants. */
 export function isTagOrDescendant(tag: string, ancestor: string): boolean {

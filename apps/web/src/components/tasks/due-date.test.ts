@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { dueStatus, formatDay, localDay } from "./due-date";
+import { dueStatus, localDay, parseDay } from "./due-date";
 
 describe("dueStatus (AC 12)", () => {
   it("compares against the local day", () => {
@@ -19,12 +19,12 @@ describe("localDay", () => {
   });
 });
 
-describe("formatDay", () => {
-  it("keeps the calendar day", () => {
-    expect(formatDay("2026-01-05")).toBe(
-      new Date(2026, 0, 5).toLocaleDateString(undefined, {
-        dateStyle: "medium",
-      })
-    );
+describe("parseDay", () => {
+  it("keeps the calendar day in local time", () => {
+    const day = parseDay("2026-10-29");
+
+    expect([day.getFullYear(), day.getMonth(), day.getDate()]).toStrictEqual([
+      2026, 9, 29,
+    ]);
   });
 });

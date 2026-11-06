@@ -1,3 +1,4 @@
+import { taskTitle } from "@acta/api/tasks/title";
 import { Button } from "@acta/ui/components/button";
 import { Calendar } from "@acta/ui/components/calendar";
 import { Label } from "@acta/ui/components/label";
@@ -11,27 +12,11 @@ import { ArrowUp, CalendarIcon, Loader2, X } from "lucide-react";
 import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
+import { COPY } from "@/components/copy";
+import { textError } from "@/components/text-error";
+
 import { TASK_COPY } from "./copy";
-import { formatDay, localDay } from "./due-date";
-
-// Mirrors the server's title rule (TASK_TITLE_MAX_CHARS in @acta/api) so the form can explain itself.
-const TASK_TITLE_MAX_CHARS = 500;
-
-function titleError(title: string): "empty" | "tooLong" | null {
-  if (title.trim() === "") {
-    return "empty";
-  }
-
-  // oxlint-disable-next-line typescript/no-misused-spread -- the limit counts code points, which is exactly what spreading yields
-  return [...title].length > TASK_TITLE_MAX_CHARS ? "tooLong" : null;
-}
-
-/** A YYYY-MM-DD day as a local-midnight Date, the shape Calendar works in. */
-function parseDay(day: string): Date {
-  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
-
-  return new Date(year, month - 1, date);
-}
+import { formatDay, localDay, parseDay } from "./due-date";
 
 export interface TaskFields {
   title: string;
@@ -61,7 +46,11 @@ export function TaskForm({
   const [pickerOpen, setPickerOpen] = useState(false);
   const titleId = useId();
   const errorId = useId();
-  const error = titleError(title);
+
+  const { invalid, message } = textError(taskTitle, title, initial.title, {
+    empty: TASK_COPY.errorEmpty,
+    tooLong: TASK_COPY.errorTooLong,
+  });
 
   const cancelOnEscape = (event: KeyboardEvent) => {
     if (event.key === "Escape" && onCancel) {
@@ -70,15 +59,6 @@ export function TaskForm({
     }
   };
 
-  // An empty title is the normal starting point; only explain "empty" once there was text.
-  let message: string | null = null;
-
-  if (error === "tooLong") {
-    message = TASK_COPY.errorTooLong;
-  } else if (error === "empty" && (title !== "" || initial.title !== "")) {
-    message = TASK_COPY.errorEmpty;
-  }
-
   return (
     <form
       noValidate
@@ -86,7 +66,7 @@ export function TaskForm({
       onSubmit={(event) => {
         event.preventDefault();
 
-        if (!saving && error === null) {
+        if (!saving && !invalid) {
           onSave({ title, dueDate });
         }
       }}
@@ -98,7 +78,7 @@ export function TaskForm({
         id={titleId}
         value={title}
         placeholder={TASK_COPY.composerPlaceholder}
-        aria-invalid={message !== null && error !== null}
+        aria-invalid={message !== null}
         aria-describedby={message === null ? undefined : errorId}
         autoFocus={onCancel !== undefined}
         variant="bare"
@@ -174,23 +154,23 @@ export function TaskForm({
         {onCancel ? (
           <div className="ml-auto flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              {TASK_COPY.cancel}
+              {COPY.cancel}
             </Button>
-            <Button type="submit" size="sm" disabled={saving || error !== null}>
+            <Button type="submit" size="sm" disabled={saving || invalid}>
               {saving && (
                 <Loader2 aria-hidden className="motion-safe:animate-spin" />
               )}
-              {TASK_COPY.save}
+              {COPY.save}
             </Button>
           </div>
         ) : (
           <Button
             type="submit"
             size="icon-sm"
-            aria-label={TASK_COPY.send}
-            title={TASK_COPY.send}
+            aria-label={COPY.send}
+            title={COPY.send}
             className="ml-auto"
-            disabled={saving || error !== null}
+            disabled={saving || invalid}
           >
             {saving ? (
               <Loader2 aria-hidden className="motion-safe:animate-spin" />
