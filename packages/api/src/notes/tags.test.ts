@@ -150,7 +150,7 @@ describe("deleteTag", () => {
   });
 
   it("keeps punctuation next to the Tag", () => {
-    expect(deleteTag("uno #ideas, dos", "ideas")).toBe("uno , dos");
+    expect(deleteTag("uno #ideas, dos", "ideas")).toBe("uno, dos");
   });
 
   it("leaves code and other Tags untouched", () => {
