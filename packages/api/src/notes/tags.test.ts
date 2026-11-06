@@ -153,6 +153,12 @@ describe("deleteTag", () => {
     expect(deleteTag("uno #ideas, dos", "ideas")).toBe("uno, dos");
   });
 
+  it("removes the brackets around a lone Tag", () => {
+    expect(deleteTag("uno (#ideas) dos [#ideas]", "ideas")).toBe("uno dos");
+    expect(deleteTag("uno (#ideas y más)", "ideas")).toBe("uno (y más)");
+    expect(deleteTag("uno [más #ideas]", "ideas")).toBe("uno [más]");
+  });
+
   it("leaves code and other Tags untouched", () => {
     expect(deleteTag("`#ideas` #ideasx", "ideas")).toBe("`#ideas` #ideasx");
   });

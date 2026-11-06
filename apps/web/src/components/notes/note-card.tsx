@@ -269,7 +269,7 @@ export function NoteCard({ note }: { note: Note }) {
             </DropdownMenu>
           </div>
           {/* Tags render as the chips below, so the card hides them from the text. */}
-          {body !== "" && <NotePreview content={body} />}
+          {body.children.length > 0 && <NotePreview content={body} />}
           {note.purgeAt !== null && (
             <p className="text-muted-foreground text-xs">
               {COPY.purgeAt(

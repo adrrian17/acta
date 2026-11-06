@@ -1,7 +1,8 @@
+import type { MarkdownInput } from "@tanstack/markdown";
 import { Markdown } from "@tanstack/markdown/react";
 
 // Raw HTML stays escaped and bare URLs stay text: both are @tanstack/markdown's defaults.
-export function NotePreview({ content }: { content: string }) {
+export function NotePreview({ content }: { content: MarkdownInput }) {
   return (
     <div className="[&_pre]:bg-muted space-y-2 break-words [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:pl-3 [&_code]:font-mono [&_h1]:text-base [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_h4]:font-semibold [&_h5]:font-semibold [&_h6]:font-semibold [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:p-2 [&_ul]:list-disc [&_ul]:pl-5">
       <Markdown>{content}</Markdown>
