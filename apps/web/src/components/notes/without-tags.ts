@@ -84,7 +84,12 @@ function hideInBlock(block: BlockNode, tags: readonly string[]): BlockNode[] {
     case "heading": {
       const children = hideInInlines(block.children, tags);
 
-      return children.length > 0 ? [{ ...block, children }] : [];
+      // The parser trims blocks, so text left with only whitespace held only Tags.
+      const blank = children.every(
+        (child) => child.type === "text" && child.value.trim() === ""
+      );
+
+      return blank ? [] : [{ ...block, children }];
     }
 
     case "blockquote": {

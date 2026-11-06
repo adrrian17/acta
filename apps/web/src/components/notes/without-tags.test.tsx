@@ -68,4 +68,19 @@ describe("withoutTags", () => {
   it("hides tags in footnotes", () => {
     expect(cardBody("[^1] x\n\n[^1]: note #ideas")).not.toContain("#ideas");
   });
+
+  it("drops blocks whose lines held only tags", () => {
+    expect(cardBody("#ideas\n#work")).toBe("");
+    expect(cardBody("> #ideas\n> #work")).toBe("");
+    expect(cardBody("- #ideas\n  #work")).toBe("");
+  });
+
+  it("keeps the space before a tag's neighbor and non-tag hashes", () => {
+    expect(cardBody("hello #ideas**world**")).toBe(
+      "<p>hello <strong>world</strong></p>"
+    );
+    expect(cardBody("hello **world**#ideas #ideas")).toBe(
+      "<p>hello <strong>world</strong>#ideas</p>"
+    );
+  });
 });
