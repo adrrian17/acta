@@ -1,3 +1,7 @@
+import { TASK_TITLE_MAX_CHARS } from "@acta/api/tasks/title";
+
+import { COPY } from "@/components/copy";
+
 // UI copy from docs/SPEC-tasks.md.
 export const TASK_COPY = {
   navTasks: "Tasks",
@@ -9,31 +13,18 @@ export const TASK_COPY = {
   reopen: "Mark as open",
   actions: "Task actions",
   toggleViews: "Show task views",
-  edit: "Edit",
   dueDate: "Due date",
   clearDueDate: "Clear due date",
   overdue: (date: string) => `Overdue · ${date}`,
   dueToday: "Today",
   doneAt: (date: string) => `Done ${date}`,
-  send: "Send",
-  save: "Save",
-  cancel: "Cancel",
-  trash: "Move to trash",
-  restore: "Restore",
-  deletePermanently: "Delete permanently",
   deletePermanentlyConfirm:
     "Delete this task permanently? This can't be undone.",
-  purgeAt: (date: string) => `Deleted after ${date}`,
   errorEmpty: "A task can't be empty.",
-  errorTooLong: "A task can be at most 500 characters.",
-  errorBadDate: "That date isn't valid.",
+  errorTooLong: `A task can be at most ${TASK_TITLE_MAX_CHARS} characters.`,
   conflictTitle: "This task changed on another device.",
   loadError: "Couldn't load your tasks.",
-  retry: "Try again",
   emptyOpen: { title: "Nothing to do", text: "Add a task above." },
   emptyDone: { title: "No finished tasks yet" },
-  emptyTrash: {
-    title: "Trash is empty",
-    text: "Tasks here are deleted after 30 days.",
-  },
+  emptyTrash: { title: COPY.trashEmpty, text: COPY.trashText("Tasks") },
 } as const;

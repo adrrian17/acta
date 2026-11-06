@@ -1,3 +1,4 @@
+import { ACCOUNT_REJECTED_ERROR } from "@acta/auth/errors";
 import { Button } from "@acta/ui/components/button";
 import {
   Card,
@@ -11,13 +12,10 @@ import { CircleAlert, Feather } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { COPY } from "@/components/copy";
 import { authClient } from "@/lib/auth-client";
 
-// Matches ACCOUNT_REJECTED_ERROR in @acta/auth; the web app can't import server code.
-const ACCOUNT_REJECTED_ERROR = "account_rejected";
-
-const COPY = {
-  appName: "acta",
+const LOGIN_COPY = {
   title: "Sign in to acta",
   tagline: "Your notes and tasks, in one place.",
   github: "Continue with GitHub",
@@ -43,7 +41,7 @@ async function signInWithGithub() {
   });
 
   if (error) {
-    toast.error(COPY.generic);
+    toast.error(LOGIN_COPY.generic);
   }
 }
 
@@ -60,7 +58,9 @@ function RouteComponent() {
   const { error } = Route.useSearch();
 
   const errorMessage =
-    error === ACCOUNT_REJECTED_ERROR ? COPY.accountRejected : COPY.generic;
+    error === ACCOUNT_REJECTED_ERROR
+      ? LOGIN_COPY.accountRejected
+      : LOGIN_COPY.generic;
 
   return (
     <main className="grid min-h-svh place-items-center p-6">
@@ -71,9 +71,9 @@ function RouteComponent() {
             {COPY.appName}
           </span>
           <CardTitle>
-            <h1>{COPY.title}</h1>
+            <h1>{LOGIN_COPY.title}</h1>
           </CardTitle>
-          <CardDescription>{COPY.tagline}</CardDescription>
+          <CardDescription>{LOGIN_COPY.tagline}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
@@ -93,7 +93,7 @@ function RouteComponent() {
               }}
             >
               <GithubMark />
-              {COPY.github}
+              {LOGIN_COPY.github}
             </Button>
           </div>
         </CardContent>

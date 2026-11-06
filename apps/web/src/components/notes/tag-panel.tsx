@@ -1,4 +1,5 @@
 import type { TagNode } from "@acta/api/notes/tag-tree";
+import { isTagOrDescendant, normalizeTag } from "@acta/api/notes/tags";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,9 +21,10 @@ import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
+import { COPY } from "@/components/copy";
 import { invalidateNotes, trpc } from "@/utils/trpc";
 
-import { COPY } from "./copy";
+import { NOTE_COPY } from "./copy";
 
 interface TagFilter {
   tag?: string;
@@ -40,13 +42,10 @@ function useTagMutationOptions(path: string, active: TagFilter) {
       changed: number;
       skipped: number;
     }) => {
-      toast.success(COPY.tagsResult(changed, skipped));
+      toast.success(NOTE_COPY.tagsResult(changed, skipped));
 
       // The filtered Tag may no longer exist; fall back to the whole Timeline.
-      if (
-        active.tag !== undefined &&
-        (active.tag === path || active.tag.startsWith(`${path}/`))
-      ) {
+      if (active.tag !== undefined && isTagOrDescendant(active.tag, path)) {
         await navigate({ to: "/", search: {} });
       }
 
@@ -58,7 +57,7 @@ function useTagMutationOptions(path: string, active: TagFilter) {
 function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
   const [to, setTo] = useState("");
   const inputId = useId();
-  const target = to.trim().replace(/^#/u, "").toLowerCase();
+  const target = normalizeTag(to.trim().replace(/^#/u, ""));
 
   const rename = useMutation(
     trpc.tags.rename.mutationOptions(useTagMutationOptions(node.path, active))
@@ -71,8 +70,8 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
           <Button
             variant="ghost-static"
             size="icon-xs"
-            aria-label={`${COPY.rename} #${node.path}`}
-            title={COPY.rename}
+            aria-label={`${NOTE_COPY.rename} #${node.path}`}
+            title={NOTE_COPY.rename}
           />
         }
       >
@@ -85,12 +84,12 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
         <AlertDialogHeader>
           <AlertDialogTitle>
             {target === ""
-              ? `${COPY.rename} #${node.path}`
-              : COPY.renameConfirm(node.path, target, node.count)}
+              ? `${NOTE_COPY.rename} #${node.path}`
+              : NOTE_COPY.renameConfirm(node.path, target, node.count)}
           </AlertDialogTitle>
         </AlertDialogHeader>
         <div className="grid gap-2">
-          <Label htmlFor={inputId}>{COPY.renameLabel}</Label>
+          <Label htmlFor={inputId}>{NOTE_COPY.renameLabel}</Label>
           <Input
             id={inputId}
             value={to}
@@ -108,7 +107,7 @@ function RenameTag({ node, active }: { node: TagNode; active: TagFilter }) {
               rename.mutate({ from: node.path, to: target });
             }}
           >
-            {COPY.rename}
+            {NOTE_COPY.rename}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -128,8 +127,8 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
           <Button
             variant="ghost-static"
             size="icon-xs"
-            aria-label={`${COPY.delete} #${node.path}`}
-            title={COPY.delete}
+            aria-label={`${NOTE_COPY.delete} #${node.path}`}
+            title={NOTE_COPY.delete}
           />
         }
       >
@@ -141,7 +140,7 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {COPY.deleteConfirm(node.path, node.count)}
+            {NOTE_COPY.deleteConfirm(node.path, node.count)}
           </AlertDialogTitle>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -153,7 +152,7 @@ function DeleteTag({ node, active }: { node: TagNode; active: TagFilter }) {
               remove.mutate({ tag: node.path });
             }}
           >
-            {COPY.delete}
+            {NOTE_COPY.delete}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -233,22 +232,22 @@ export function TagPanel({ active }: { active: TagFilter }) {
 
   return (
     <nav
-      aria-label={COPY.tagsTitle}
+      aria-label={NOTE_COPY.tagsTitle}
       className="grid content-start gap-1 text-sm"
     >
       <h2 className="text-muted-foreground px-1 pb-1 text-xs">
-        {COPY.tagsTitle}
+        {NOTE_COPY.tagsTitle}
       </h2>
       {tree.data && (
         <>
           <FilterRow
-            label={COPY.untagged}
+            label={NOTE_COPY.untagged}
             filter={{ untagged: true }}
             isActive={active.untagged === true}
           />
           {tree.data.nodes.length === 0 ? (
             <p className="text-muted-foreground px-1 pt-1 text-xs">
-              {COPY.noTags}
+              {NOTE_COPY.noTags}
             </p>
           ) : (
             <TagTree nodes={tree.data.nodes} active={active} />

@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 
-import { COPY } from "@/components/notes/copy";
+import { NOTE_COPY } from "@/components/notes/copy";
 import { NoteEditor } from "@/components/notes/note-editor";
 import { NoteList } from "@/components/notes/note-list";
 import { invalidateNotes, trpc } from "@/utils/trpc";
@@ -37,7 +37,7 @@ function TimelineRoute() {
       <div className="bg-card focus-within:border-ring/60 mb-3 rounded-xl border transition-colors">
         <NoteEditor
           key={composerKey}
-          label={COPY.composerLabel}
+          label={NOTE_COPY.composerLabel}
           saving={create.isPending}
           onSave={(content) => {
             create.mutate({ content });
@@ -48,8 +48,8 @@ function TimelineRoute() {
         view="timeline"
         empty={
           filter.tag === undefined && filter.untagged !== true
-            ? COPY.emptyTimeline
-            : COPY.emptyFiltered
+            ? NOTE_COPY.emptyTimeline
+            : NOTE_COPY.emptyFiltered
         }
         tag={filter.tag}
         untagged={filter.untagged}

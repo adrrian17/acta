@@ -1,23 +1,19 @@
+import { noteContent } from "@acta/api/notes/content";
 import { Button } from "@acta/ui/components/button";
 import { Label } from "@acta/ui/components/label";
 import { Textarea } from "@acta/ui/components/textarea";
 import { ArrowUp, Eye, Hash, List, Loader2 } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
-import { COPY } from "./copy";
+import { COPY } from "@/components/copy";
+
+import { NOTE_COPY } from "./copy";
 import { insertText } from "./insert-text";
 import { NotePreview } from "./note-preview";
 
-// Mirrors the server's content rules (NOTE_MAX_CHARS in @acta/api) so Save can explain itself.
-const NOTE_MAX_CHARS = 100_000;
-
-function contentError(content: string): "empty" | "tooLong" | null {
-  if (content.trim() === "") {
-    return "empty";
-  }
-
-  // oxlint-disable-next-line typescript/no-misused-spread -- the limit counts code points, which is exactly what spreading yields
-  return [...content].length > NOTE_MAX_CHARS ? "tooLong" : null;
+/** The server's own content rule, so Save can explain what it would reject. */
+function contentError(content: string): string | null {
+  return noteContent.safeParse(content).error?.issues[0]?.message ?? null;
 }
 
 // An empty composer is the normal starting point; only explain "empty" once there was text.
@@ -27,11 +23,11 @@ function errorMessage(
   initialContent: string
 ): string | null {
   if (error === "tooLong") {
-    return COPY.errorTooLong;
+    return NOTE_COPY.errorTooLong;
   }
 
   if (error === "empty" && (content !== "" || initialContent !== "")) {
-    return COPY.errorEmpty;
+    return NOTE_COPY.errorEmpty;
   }
 
   return null;
@@ -114,7 +110,7 @@ export function NoteEditor({
               id={textareaId}
               ref={textareaRef}
               value={content}
-              placeholder={COPY.composerPlaceholder}
+              placeholder={NOTE_COPY.composerPlaceholder}
               aria-invalid={message !== null}
               aria-describedby={message === null ? undefined : errorId}
               variant="bare"
@@ -147,8 +143,8 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={COPY.insertTag}
-            title={COPY.insertTag}
+            aria-label={NOTE_COPY.insertTag}
+            title={NOTE_COPY.insertTag}
             disabled={previewing}
             onClick={() => {
               insert("#", false);
@@ -160,8 +156,8 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={COPY.insertList}
-            title={COPY.insertList}
+            aria-label={NOTE_COPY.insertList}
+            title={NOTE_COPY.insertList}
             disabled={previewing}
             onClick={() => {
               insert("- ", true);
@@ -174,8 +170,8 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={COPY.preview}
-            title={COPY.preview}
+            aria-label={NOTE_COPY.preview}
+            title={NOTE_COPY.preview}
             aria-pressed={previewing}
             onClick={() => {
               setPreviewing((shown) => !shown);

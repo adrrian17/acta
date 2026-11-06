@@ -1,3 +1,4 @@
+import { taskTitle } from "@acta/api/tasks/title";
 import { Button } from "@acta/ui/components/button";
 import { Calendar } from "@acta/ui/components/calendar";
 import { Label } from "@acta/ui/components/label";
@@ -11,26 +12,14 @@ import { ArrowUp, CalendarIcon, Loader2, X } from "lucide-react";
 import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
+import { COPY } from "@/components/copy";
+
 import { TASK_COPY } from "./copy";
-import { formatDay, localDay } from "./due-date";
+import { formatDay, localDay, parseDay } from "./due-date";
 
-// Mirrors the server's title rule (TASK_TITLE_MAX_CHARS in @acta/api) so the form can explain itself.
-const TASK_TITLE_MAX_CHARS = 500;
-
-function titleError(title: string): "empty" | "tooLong" | null {
-  if (title.trim() === "") {
-    return "empty";
-  }
-
-  // oxlint-disable-next-line typescript/no-misused-spread -- the limit counts code points, which is exactly what spreading yields
-  return [...title].length > TASK_TITLE_MAX_CHARS ? "tooLong" : null;
-}
-
-/** A YYYY-MM-DD day as a local-midnight Date, the shape Calendar works in. */
-function parseDay(day: string): Date {
-  const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
-
-  return new Date(year, month - 1, date);
+/** The server's own title rule, so the form can explain a Save it would reject. */
+function titleError(title: string): string | null {
+  return taskTitle.safeParse(title).error?.issues[0]?.message ?? null;
 }
 
 export interface TaskFields {
@@ -174,21 +163,21 @@ export function TaskForm({
         {onCancel ? (
           <div className="ml-auto flex gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-              {TASK_COPY.cancel}
+              {COPY.cancel}
             </Button>
             <Button type="submit" size="sm" disabled={saving || error !== null}>
               {saving && (
                 <Loader2 aria-hidden className="motion-safe:animate-spin" />
               )}
-              {TASK_COPY.save}
+              {COPY.save}
             </Button>
           </div>
         ) : (
           <Button
             type="submit"
             size="icon-sm"
-            aria-label={TASK_COPY.send}
-            title={TASK_COPY.send}
+            aria-label={COPY.send}
+            title={COPY.send}
             className="ml-auto"
             disabled={saving || error !== null}
           >
