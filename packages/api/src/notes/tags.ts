@@ -170,16 +170,10 @@ function spaceRunEnd(text: string, index: number): number {
   return end;
 }
 
-const CLOSING_BRACKET = new Map([
-  ["(", ")"],
-  ["[", "]"],
-]);
-
-/** The token, or the brackets around it when it is all they hold: "(#ideas)". */
+/** The token, or the parentheses around it when it is all they hold: "(#ideas)". */
 function removedUnit(text: string, token: TagToken): TagToken {
-  const closing = CLOSING_BRACKET.get(text.charAt(token.start - 1));
-
-  return closing !== undefined && text.charAt(token.end) === closing
+  // Brackets stay: they can be a link label, and a destination is never scanned.
+  return text.charAt(token.start - 1) === "(" && text.charAt(token.end) === ")"
     ? { ...token, start: token.start - 1, end: token.end + 1 }
     : token;
 }

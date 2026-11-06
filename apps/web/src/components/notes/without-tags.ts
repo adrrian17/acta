@@ -7,25 +7,39 @@ import type {
   TableCellNode,
 } from "@tanstack/markdown";
 
+// Stands in for a neighboring node, so a Tag next to it is mid-line, not at a line edge.
+const NEIGHBOR = "\u0001";
+
 // shortcut: text nodes lose source context, so an escaped `\#ideas` hides too when #ideas is a Tag; map source offsets if that matters.
-function hideInText(value: string, tags: readonly string[]): string {
-  let text = value;
+function hideInText(
+  value: string,
+  tags: readonly string[],
+  neighbors: { before: boolean; after: boolean }
+): string {
+  const before = neighbors.before ? NEIGHBOR : "";
+  const after = neighbors.after ? NEIGHBOR : "";
+  let text = before + value + after;
 
   for (const tag of tags) {
     text = deleteTag(text, tag);
   }
 
-  return text;
+  return text.slice(before.length, text.length - after.length);
 }
 
+/** `nested` is true inside emphasis, whose delimiters neighbor every edge. */
 function hideInInlines(
   nodes: InlineNode[],
-  tags: readonly string[]
+  tags: readonly string[],
+  nested = false
 ): InlineNode[] {
-  return nodes.flatMap((node): InlineNode[] => {
+  return nodes.flatMap((node, index): InlineNode[] => {
     switch (node.type) {
       case "text": {
-        const value = hideInText(node.value, tags);
+        const value = hideInText(node.value, tags, {
+          before: nested || index > 0,
+          after: nested || index < nodes.length - 1,
+        });
 
         return value === "" ? [] : [{ ...node, value }];
       }
@@ -33,7 +47,7 @@ function hideInInlines(
       case "strong":
       case "emphasis":
       case "strike": {
-        const children = hideInInlines(node.children, tags);
+        const children = hideInInlines(node.children, tags, true);
 
         return children.length > 0 ? [{ ...node, children }] : [];
       }
@@ -111,10 +125,23 @@ function hideInBlock(block: BlockNode, tags: readonly string[]): BlockNode[] {
       ];
     }
 
+    case "footnotes": {
+      return [
+        {
+          ...block,
+          items: block.items.map((item) => ({
+            ...item,
+            children: item.children.flatMap((child) =>
+              hideInBlock(child, tags)
+            ),
+          })),
+        },
+      ];
+    }
+
     case "code":
     case "html":
     case "thematicBreak":
-    case "footnotes":
     case "callout":
     case "component": {
       return [block];

@@ -55,4 +55,17 @@ describe("withoutTags", () => {
   it("drops a blockquote that held only tags", () => {
     expect(cardBody("> #ideas")).toBe("");
   });
+
+  it("keeps the space between the nodes around a hidden tag", () => {
+    expect(cardBody("x **a** #ideas **b**")).toBe(
+      "<p>x <strong>a</strong> <strong>b</strong></p>"
+    );
+    expect(cardBody("x *a* #ideas, *b*")).toBe(
+      "<p>x <em>a</em>, <em>b</em></p>"
+    );
+  });
+
+  it("hides tags in footnotes", () => {
+    expect(cardBody("[^1] x\n\n[^1]: note #ideas")).not.toContain("#ideas");
+  });
 });
