@@ -27,7 +27,7 @@ function hideInText(
   return text.slice(before.length, text.length - after.length);
 }
 
-/** `nested` is true inside emphasis, whose delimiters neighbor every edge. */
+/** `nested` is true inside emphasis, whose delimiters neighbor its outer edges. */
 function hideInInlines(
   nodes: InlineNode[],
   tags: readonly string[],
@@ -41,8 +41,8 @@ function hideInInlines(
         const after = nodes[index + 1];
 
         const value = hideInText(node.value, tags, {
-          before: nested || (before !== undefined && before.type !== "break"),
-          after: nested || (after !== undefined && after.type !== "break"),
+          before: before === undefined ? nested : before.type !== "break",
+          after: after === undefined ? nested : after.type !== "break",
         });
 
         return value === "" ? [] : [{ ...node, value }];
