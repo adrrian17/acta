@@ -1,23 +1,189 @@
 import { deleteTag } from "@acta/api/notes/tags";
+import { parseMarkdown } from "@tanstack/markdown";
+import type {
+  BlockNode,
+  InlineNode,
+  MarkdownDocument,
+  TableCellNode,
+} from "@tanstack/markdown";
 
-/** A Note's text for its card: Tags show as chips there, so their tokens are hidden. */
-export function withoutTags(content: string, tags: readonly string[]): string {
-  let text = content;
+// Stands in for a neighboring node, so a Tag next to it is mid-line, not at a line edge.
+const NEIGHBOR = "\u0001";
+
+// shortcut: text nodes lose source context, so an escaped `\#ideas` hides too when #ideas is a Tag; map source offsets if that matters.
+function hideInText(
+  value: string,
+  tags: readonly string[],
+  neighbors: { before: boolean; after: boolean }
+): string {
+  const before = neighbors.before ? NEIGHBOR : "";
+  const after = neighbors.after ? NEIGHBOR : "";
+  let text = before + value + after;
 
   for (const tag of tags) {
     text = deleteTag(text, tag);
   }
 
-  // Drop only the blank lines a removed tag line leaves at the edges; indentation is Markdown.
-  const lines = text.split("\n");
+  return text.slice(before.length, text.length - after.length);
+}
 
-  while (lines.length > 0 && lines[0]?.trim() === "") {
-    lines.shift();
+/** `nested` is true inside emphasis, whose delimiters neighbor its outer edges. */
+function hideInInlines(
+  nodes: InlineNode[],
+  tags: readonly string[],
+  nested = false
+): InlineNode[] {
+  return nodes.flatMap((node, index): InlineNode[] => {
+    switch (node.type) {
+      case "text": {
+        // A hard break ends the line, so it is an edge, not a neighbor.
+        const before = nodes[index - 1];
+        const after = nodes[index + 1];
+
+        const value = hideInText(node.value, tags, {
+          before: before === undefined ? nested : before.type !== "break",
+          after: after === undefined ? nested : after.type !== "break",
+        });
+
+        return value === "" ? [] : [{ ...node, value }];
+      }
+
+      case "strong":
+      case "emphasis":
+      case "strike": {
+        const children = hideInInlines(node.children, tags, true);
+
+        return children.length > 0 ? [{ ...node, children }] : [];
+      }
+
+      case "image": {
+        return [
+          {
+            ...node,
+            alt: hideInText(node.alt, tags, { before: false, after: false }),
+          },
+        ];
+      }
+
+      // A link keeps its text so it stays visible and clickable.
+      case "link":
+      case "inlineCode":
+      case "inlineHtml":
+      case "inlineComponent":
+      case "break":
+      case "footnoteReference": {
+        return [node];
+      }
+
+      default: {
+        return [node];
+      }
+    }
+  });
+}
+
+function hideInCell(
+  cell: TableCellNode,
+  tags: readonly string[]
+): TableCellNode {
+  return { ...cell, children: hideInInlines(cell.children, tags) };
+}
+
+/** The block with Tags hidden, or nothing when it held only Tags. */
+function hideInBlock(block: BlockNode, tags: readonly string[]): BlockNode[] {
+  switch (block.type) {
+    case "paragraph":
+    case "heading": {
+      const children = hideInInlines(block.children, tags);
+
+      // The parser trims blocks, so text left with only whitespace held only Tags.
+      const blank = children.every(
+        (child) => child.type === "text" && child.value.trim() === ""
+      );
+
+      return blank ? [] : [{ ...block, children }];
+    }
+
+    case "blockquote": {
+      const children = block.children.flatMap((child) =>
+        hideInBlock(child, tags)
+      );
+
+      return children.length > 0 ? [{ ...block, children }] : [];
+    }
+
+    case "list": {
+      const items = block.items.flatMap((item) => {
+        const children = item.children.flatMap((child) =>
+          hideInBlock(child, tags)
+        );
+
+        // A task item keeps its checkbox; an item that was empty as typed stays.
+        const emptied =
+          children.length === 0 &&
+          item.children.length > 0 &&
+          item.checked === undefined;
+
+        return emptied ? [] : [{ ...item, children }];
+      });
+
+      return items.length > 0 ? [{ ...block, items }] : [];
+    }
+
+    case "table": {
+      const header = block.header.map((cell) => hideInCell(cell, tags));
+
+      const rows = block.rows.map((row) =>
+        row.map((cell) => hideInCell(cell, tags))
+      );
+
+      const emptied = [header, ...rows].every((row) =>
+        row.every((cell) => cell.children.length === 0)
+      );
+
+      return emptied ? [] : [{ ...block, header, rows }];
+    }
+
+    case "footnotes": {
+      return [
+        {
+          ...block,
+          items: block.items.map((item) => ({
+            ...item,
+            children: item.children.flatMap((child) =>
+              hideInBlock(child, tags)
+            ),
+          })),
+        },
+      ];
+    }
+
+    case "code":
+    case "html":
+    case "thematicBreak":
+    case "callout":
+    case "component": {
+      return [block];
+    }
+
+    default: {
+      return [block];
+    }
   }
+}
 
-  while (lines.length > 0 && lines.at(-1)?.trim() === "") {
-    lines.pop();
-  }
+/**
+ * A Note's parsed text for its card: Tags show as chips there, so their tokens are hidden.
+ * Tags go after parsing, so hiding one never changes how the rest of the Markdown parses.
+ */
+export function withoutTags(
+  content: string,
+  tags: readonly string[]
+): MarkdownDocument {
+  const document = parseMarkdown(content);
 
-  return lines.join("\n");
+  return {
+    ...document,
+    children: document.children.flatMap((block) => hideInBlock(block, tags)),
+  };
 }

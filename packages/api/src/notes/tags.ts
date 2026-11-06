@@ -28,6 +28,14 @@ const LETTER = /\p{L}/u;
 const HORIZONTAL_SPACE = /[ \t]/u;
 const PUNCTUATION = /[,.;:!?]/u;
 
+// A line break or bracket bounds a token like the edge of the text does.
+const OPENING_EDGE = /[\n([]/u;
+const CLOSING_EDGE = /[\n)\]]/u;
+
+// The character outside the parentheses; empty at either end of the text, or a link label edge.
+const BEFORE_STANDALONE = /^[\s[]?$/u;
+const AFTER_STANDALONE = /^[\s,.;:!?\]]?$/u;
+
 function mask(text: string, start: number, end: number): string {
   return text.slice(0, start) + MASK.repeat(end - start) + text.slice(end);
 }
@@ -166,23 +174,39 @@ function spaceRunEnd(text: string, index: number): number {
   return end;
 }
 
+/** The token, or the parentheses around it when they stand alone holding only it: " (#ideas) ". */
+function removedUnit(text: string, token: TagToken): TagToken {
+  // Brackets stay: they can be a link label, and a destination is never scanned.
+  const wrapped =
+    text.charAt(token.start - 1) === "(" && text.charAt(token.end) === ")";
+
+  const standalone =
+    BEFORE_STANDALONE.test(text.charAt(token.start - 2)) &&
+    AFTER_STANDALONE.test(text.charAt(token.end + 1));
+
+  return wrapped && standalone
+    ? { ...token, start: token.start - 1, end: token.end + 1 }
+    : token;
+}
+
 /** The range to cut so that removing a token leaves no whitespace it created. */
-function removalRange(text: string, token: TagToken): [number, number] {
+function removalRange(text: string, tagToken: TagToken): [number, number] {
+  const token = removedUnit(text, tagToken);
   const before = spaceRunStart(text, token.start);
   const after = spaceRunEnd(text, token.end);
-  const atLineStart = before === 0 || text[before - 1] === "\n";
-  const atLineEnd = after === text.length || text[after] === "\n";
+  const atStart = before === 0 || OPENING_EDGE.test(text.charAt(before - 1));
+  const atEnd = after === text.length || CLOSING_EDGE.test(text.charAt(after));
 
-  if (atLineStart && atLineEnd) {
+  if (atStart && atEnd) {
     return [before, after];
   }
 
-  if (atLineStart) {
+  if (atStart) {
     return [token.start, after];
   }
 
   // "uno #ideas, dos" -> "uno, dos": punctuation closes up to the word before.
-  if (atLineEnd || PUNCTUATION.test(text.charAt(token.end))) {
+  if (atEnd || PUNCTUATION.test(text.charAt(token.end))) {
     return [before, token.end];
   }
 

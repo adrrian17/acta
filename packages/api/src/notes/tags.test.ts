@@ -153,6 +153,25 @@ describe("deleteTag", () => {
     expect(deleteTag("uno #ideas, dos", "ideas")).toBe("uno, dos");
   });
 
+  it("removes the parentheses around a lone Tag", () => {
+    expect(deleteTag("uno (#ideas) dos", "ideas")).toBe("uno dos");
+    expect(deleteTag("foo(#ideas)bar", "ideas")).toBe("foo()bar");
+    expect(deleteTag("uno (#ideas y más)", "ideas")).toBe("uno (y más)");
+    expect(deleteTag("uno [más #ideas]", "ideas")).toBe("uno [más]");
+    expect(deleteTag("[foo (#ideas)](https://x.com)", "ideas")).toBe(
+      "[foo](https://x.com)"
+    );
+    expect(deleteTag("[(#ideas) foo](https://x.com)", "ideas")).toBe(
+      "[foo](https://x.com)"
+    );
+  });
+
+  it("keeps link brackets", () => {
+    expect(deleteTag("[#ideas](https://x.com) [a][#ideas]", "ideas")).toBe(
+      "[](https://x.com) [a][]"
+    );
+  });
+
   it("leaves code and other Tags untouched", () => {
     expect(deleteTag("`#ideas` #ideasx", "ideas")).toBe("`#ideas` #ideasx");
   });
