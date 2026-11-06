@@ -43,7 +43,10 @@ export default function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuGroup>
-          <DropdownMenuLabel>{session.user.email}</DropdownMenuLabel>
+          <DropdownMenuLabel>
+            {/* The popup is as wide as the trigger, so a long email wraps instead of clipping. */}
+            <span className="break-all">{session.user.email}</span>
+          </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <ModeToggle />
           <DropdownMenuSeparator />
