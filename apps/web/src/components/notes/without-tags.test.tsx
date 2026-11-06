@@ -83,4 +83,8 @@ describe("withoutTags", () => {
       "<p>hello <strong>world</strong>#ideas</p>"
     );
   });
+
+  it("hides a tag that starts the line after a hard break", () => {
+    expect(cardBody("a\\\n#ideas b")).toBe("<p>a<br/>b</p>");
+  });
 });

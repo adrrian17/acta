@@ -36,9 +36,13 @@ function hideInInlines(
   return nodes.flatMap((node, index): InlineNode[] => {
     switch (node.type) {
       case "text": {
+        // A hard break ends the line, so it is an edge, not a neighbor.
+        const before = nodes[index - 1];
+        const after = nodes[index + 1];
+
         const value = hideInText(node.value, tags, {
-          before: nested || index > 0,
-          after: nested || index < nodes.length - 1,
+          before: nested || (before !== undefined && before.type !== "break"),
+          after: nested || (after !== undefined && after.type !== "break"),
         });
 
         return value === "" ? [] : [{ ...node, value }];
