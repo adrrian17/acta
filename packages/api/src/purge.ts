@@ -11,7 +11,7 @@ const PURGE_BATCH_SIZE = 500;
 /** Every table whose rows can be Trashed, and so purged. */
 export const TRASHABLE = [note, task] as const;
 
-/** Permanently deletes rows trashed at least 30 days before `now`. Returns how many. */
+/** Permanently deletes rows trashed at least TRASH_RETENTION_MS before `now`. Returns how many. */
 export async function purgeTrashed(
   db: Database,
   table: (typeof TRASHABLE)[number],

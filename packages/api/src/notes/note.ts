@@ -16,7 +16,7 @@ export interface Note {
   purgeAt: number | null;
 }
 
-export type NoteRow = typeof note.$inferSelect & {
+type NoteRow = typeof note.$inferSelect & {
   tags: Pick<typeof noteTag.$inferSelect, "tag">[];
 };
 

@@ -4,8 +4,9 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter/relations-v2";
 import { betterAuth } from "better-auth";
 
 import { assertOwnerProfile } from "./owner";
+import { LOGIN_PATH } from "./shared";
 
-export interface AuthConfig {
+interface AuthConfig {
   BETTER_AUTH_URL: string;
   BETTER_AUTH_SECRET: string;
   CORS_ORIGIN: string;
@@ -29,7 +30,7 @@ export function createAuth(env: AuthConfig, database: Database) {
           await assertOwnerProfile(
             profile,
             env.OWNER_GITHUB_ID,
-            `${env.CORS_ORIGIN}/login`
+            `${env.CORS_ORIGIN}${LOGIN_PATH}`
           );
 
           return {};

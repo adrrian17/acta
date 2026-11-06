@@ -31,7 +31,7 @@ import { decodeCursor, pageLimit, toPage } from "../paging";
 import type { CursorKey } from "../paging";
 import { trashCursor } from "../trash";
 
-export const PAGE_SIZE = 30;
+const PAGE_SIZE = 30;
 
 const listInput = z
   .object({

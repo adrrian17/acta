@@ -1,4 +1,8 @@
-import { ACCOUNT_REJECTED_ERROR } from "@acta/auth/errors";
+import {
+  ACCOUNT_REJECTED_ERROR,
+  GITHUB_PROVIDER_ID,
+  LOGIN_PATH,
+} from "@acta/auth/shared";
 import { Button } from "@acta/ui/components/button";
 import {
   Card,
@@ -35,9 +39,9 @@ export const Route = createFileRoute("/login")({
 async function signInWithGithub() {
   // Absolute URLs: Better Auth resolves relative ones against the server's origin.
   const { error } = await authClient.signIn.social({
-    provider: "github",
+    provider: GITHUB_PROVIDER_ID,
     callbackURL: `${window.location.origin}/`,
-    errorCallbackURL: `${window.location.origin}/login`,
+    errorCallbackURL: `${window.location.origin}${LOGIN_PATH}`,
   });
 
   if (error) {

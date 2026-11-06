@@ -25,7 +25,7 @@ export const server = Worker(
       compatibility: {
         flags: ["nodejs_compat"],
       },
-      // Daily purge of Notes and Tasks trashed 30+ days ago; handled by `scheduled` in apps/server.
+      // Daily purge of trashed Notes and Tasks; handled by `scheduled` in apps/server.
       crons: ["0 3 * * *"],
       env: {
         DB: db,

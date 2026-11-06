@@ -1,4 +1,5 @@
 import type { AppRouter } from "@acta/api/routers/index";
+import { LOGIN_PATH } from "@acta/auth/shared";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import {
   createTRPCClient,
@@ -16,7 +17,7 @@ function redirectIfUnauthorized(error: Error): boolean {
     isTRPCClientError<AppRouter>(error) &&
     error.data?.code === "UNAUTHORIZED"
   ) {
-    window.location.assign("/login");
+    window.location.assign(LOGIN_PATH);
 
     return true;
   }

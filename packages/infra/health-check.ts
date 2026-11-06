@@ -6,12 +6,12 @@ const healthResponse = z.object({
   result: z.object({ data: z.literal("OK") }),
 });
 
-export interface HealthTarget {
+interface HealthTarget {
   webOrigin: string;
   serverOrigin: string;
 }
 
-export interface HealthOptions {
+interface HealthOptions {
   attempts: number;
   delayMs: number;
   requestTimeoutMs: number;

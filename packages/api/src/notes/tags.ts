@@ -22,10 +22,15 @@ const LINK_DESTINATION = /(?<=\])\([^)]*\)/gu;
 // Masking from `://` is enough: a scheme cannot contain `#`.
 const URL = /(?<=[\da-z]):\/\/\S+/giu;
 
-const TAG_TOKEN =
-  /(?<=^|[\s([])#(?<raw>[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*)/gu;
+// One or more `/`-separated segments of letters, marks, digits, `_` and `-`.
+const TAG_BODY = String.raw`[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*`;
 
-const TAG = /^[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*$/u;
+const TAG_TOKEN = new RegExp(
+  String.raw`(?<=^|[\s([])#(?<raw>${TAG_BODY})`,
+  "gu"
+);
+
+const TAG = new RegExp(`^${TAG_BODY}$`, "u");
 const LETTER = /\p{L}/u;
 const HORIZONTAL_SPACE = /[ \t]/u;
 const PUNCTUATION = /[,.;:!?]/u;

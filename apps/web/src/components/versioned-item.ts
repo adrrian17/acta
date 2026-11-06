@@ -9,7 +9,10 @@ interface ItemError {
 // The item on screen is out of date: it changed, is gone, or is no longer in that state.
 const STALE_CODES = new Set(["CONFLICT", "NOT_FOUND", "PRECONDITION_FAILED"]);
 
-/** Reports a failed write on a Note or Task, refetching its list when the item is stale. */
+/**
+ * Reports a failed write on a Note or Task, refetching its list when the item is stale.
+ * A mutation with its own onError skips the global toast in utils/trpc.ts, so this shows it.
+ */
 export function itemErrorHandler(invalidate: () => Promise<void>) {
   return (error: ItemError) => {
     const code = error.data?.code;

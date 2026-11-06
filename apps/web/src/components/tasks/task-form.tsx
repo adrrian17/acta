@@ -13,14 +13,10 @@ import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
 import { COPY } from "@/components/copy";
+import { textError } from "@/components/text-error";
 
 import { TASK_COPY } from "./copy";
 import { formatDay, localDay, parseDay } from "./due-date";
-
-/** The server's own title rule, so the form can explain a Save it would reject. */
-function titleError(title: string): string | null {
-  return taskTitle.safeParse(title).error?.issues[0]?.message ?? null;
-}
 
 export interface TaskFields {
   title: string;
@@ -50,7 +46,11 @@ export function TaskForm({
   const [pickerOpen, setPickerOpen] = useState(false);
   const titleId = useId();
   const errorId = useId();
-  const error = titleError(title);
+
+  const { invalid, message } = textError(taskTitle, title, initial.title, {
+    empty: TASK_COPY.errorEmpty,
+    tooLong: TASK_COPY.errorTooLong,
+  });
 
   const cancelOnEscape = (event: KeyboardEvent) => {
     if (event.key === "Escape" && onCancel) {
@@ -59,15 +59,6 @@ export function TaskForm({
     }
   };
 
-  // An empty title is the normal starting point; only explain "empty" once there was text.
-  let message: string | null = null;
-
-  if (error === "tooLong") {
-    message = TASK_COPY.errorTooLong;
-  } else if (error === "empty" && (title !== "" || initial.title !== "")) {
-    message = TASK_COPY.errorEmpty;
-  }
-
   return (
     <form
       noValidate
@@ -75,7 +66,7 @@ export function TaskForm({
       onSubmit={(event) => {
         event.preventDefault();
 
-        if (!saving && error === null) {
+        if (!saving && !invalid) {
           onSave({ title, dueDate });
         }
       }}
@@ -87,7 +78,7 @@ export function TaskForm({
         id={titleId}
         value={title}
         placeholder={TASK_COPY.composerPlaceholder}
-        aria-invalid={message !== null && error !== null}
+        aria-invalid={message !== null}
         aria-describedby={message === null ? undefined : errorId}
         autoFocus={onCancel !== undefined}
         variant="bare"
@@ -165,7 +156,7 @@ export function TaskForm({
             <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
               {COPY.cancel}
             </Button>
-            <Button type="submit" size="sm" disabled={saving || error !== null}>
+            <Button type="submit" size="sm" disabled={saving || invalid}>
               {saving && (
                 <Loader2 aria-hidden className="motion-safe:animate-spin" />
               )}
@@ -179,7 +170,7 @@ export function TaskForm({
             aria-label={COPY.send}
             title={COPY.send}
             className="ml-auto"
-            disabled={saving || error !== null}
+            disabled={saving || invalid}
           >
             {saving ? (
               <Loader2 aria-hidden className="motion-safe:animate-spin" />

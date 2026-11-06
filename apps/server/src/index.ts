@@ -60,7 +60,7 @@ app.get("/", (c) => c.text("OK"));
 
 export default {
   fetch: app.fetch,
-  // Daily Cron Trigger (see alchemy.run.ts) that purges Notes and Tasks trashed 30+ days ago.
+  // Daily Cron Trigger (see alchemy.run.ts) that purges Notes and Tasks past their Trash retention.
   scheduled(controller, _env, ctx) {
     const db = getDb();
     const now = new Date(controller.scheduledTime);

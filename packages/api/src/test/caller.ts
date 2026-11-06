@@ -1,5 +1,5 @@
 import type { Session } from "@acta/auth";
-import { GITHUB_PROVIDER_ID } from "@acta/auth/owner";
+import { GITHUB_PROVIDER_ID } from "@acta/auth/shared";
 import { createDb } from "@acta/db";
 import { account, user } from "@acta/db/schema/auth";
 

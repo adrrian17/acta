@@ -16,7 +16,7 @@ import type { Task } from "../tasks/task";
 import { taskDueDate, taskTitle } from "../tasks/title";
 import { trashCursor } from "../trash";
 
-export const TASK_PAGE_SIZE = 50;
+const TASK_PAGE_SIZE = 50;
 
 const listInput = z.object({
   view: z.enum(TASK_STATES),

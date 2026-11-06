@@ -2,9 +2,7 @@ import type { Database } from "@acta/db";
 import { appendQueryParams } from "@better-auth/core/utils/url";
 import { APIError, getOAuthState } from "better-auth/api";
 
-import { ACCOUNT_REJECTED_ERROR } from "./errors";
-
-export const GITHUB_PROVIDER_ID = "github";
+import { ACCOUNT_REJECTED_ERROR, GITHUB_PROVIDER_ID } from "./shared";
 
 /** Compares as strings so `account.accountId` and GitHub's numeric `id` share one check. */
 export function isOwnerGithubId(
