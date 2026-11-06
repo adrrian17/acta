@@ -1,6 +1,5 @@
-import { purgeTrashedNotes } from "@acta/api/notes/purge";
+import { purgeTrashed, TRASHABLE } from "@acta/api/purge";
 import { appRouter } from "@acta/api/routers/index";
-import { purgeTrashedTasks } from "@acta/api/tasks/purge";
 import { trpcServer } from "@hono/trpc-server";
 import { initLogger } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
@@ -53,7 +52,7 @@ app.use(
   trpcServer({
     endpoint: "/trpc",
     router: appRouter,
-    createContext: async (_opts, context) => await createContext({ context }),
+    createContext: async (_opts, context) => await createContext(context),
   })
 );
 
@@ -65,8 +64,10 @@ export default {
   scheduled(controller, _env, ctx) {
     const db = getDb();
     const now = new Date(controller.scheduledTime);
-    // Separate waitUntil calls keep each purge tracked even if the other rejects.
-    ctx.waitUntil(purgeTrashedNotes(db, now));
-    ctx.waitUntil(purgeTrashedTasks(db, now));
+
+    // Separate waitUntil calls keep each purge tracked even if another rejects.
+    for (const table of TRASHABLE) {
+      ctx.waitUntil(purgeTrashed(db, table, now));
+    }
   },
 } satisfies ExportedHandler;

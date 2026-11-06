@@ -5,16 +5,15 @@ import { and, count, eq, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { z } from "zod";
 
-import { protectedProcedure, router } from "../index";
+import { byId, protectedProcedure, router, versioned } from "../index";
 import { noteContent } from "../notes/content";
-import {
-  decodeCursor,
-  encodeCursor,
-  timelineCursor,
-  trashCursor,
-} from "../notes/cursor";
-import { applyTransition, canSetPinned, NOTE_STATES } from "../notes/lifecycle";
-import type { NoteState, Transition } from "../notes/lifecycle";
+import { timelineCursor } from "../notes/cursor";
+import { applyPinned, applyTransition, NOTE_STATES } from "../notes/lifecycle";
+import type {
+  LifecycleFields,
+  NoteState,
+  Transition,
+} from "../notes/lifecycle";
 import { toNote } from "../notes/note";
 import type { Note } from "../notes/note";
 import {
@@ -27,18 +26,12 @@ import {
   untagged,
   writeNote,
 } from "../notes/store";
-import { extractTags, isValidTag, normalizeTag } from "../notes/tags";
+import { extractTags, tagInput } from "../notes/tags";
+import { decodeCursor, pageLimit, toPage } from "../paging";
+import type { CursorKey } from "../paging";
+import { trashCursor } from "../trash";
 
 export const PAGE_SIZE = 30;
-const MAX_PAGE_SIZE = 100;
-
-const noteId = z.object({ id: z.string() });
-const versioned = z.object({ id: z.string(), version: z.int().positive() });
-
-const tagInput = z
-  .string()
-  .transform(normalizeTag)
-  .refine(isValidTag, { error: "Invalid tag" });
 
 const listInput = z
   .object({
@@ -46,7 +39,7 @@ const listInput = z
     tag: tagInput.optional(),
     untagged: z.literal(true).optional(),
     cursor: z.string().optional(),
-    limit: z.int().min(1).max(MAX_PAGE_SIZE).default(PAGE_SIZE),
+    limit: pageLimit(PAGE_SIZE),
   })
   .refine((input) => !(input.tag !== undefined && input.untagged), {
     error: "Filter by a tag or by untagged, not both",
@@ -60,10 +53,6 @@ const listInput = z
 
 type ListInput = z.infer<typeof listInput>;
 
-function badCursor(): TRPCError {
-  return new TRPCError({ code: "BAD_REQUEST", message: "Invalid cursor" });
-}
-
 /** Rows strictly after the cursor in the view's sort order. */
 function afterCursor(input: ListInput, table: typeof note): SQL | undefined {
   if (input.cursor === undefined) {
@@ -73,36 +62,32 @@ function afterCursor(input: ListInput, table: typeof note): SQL | undefined {
   if (input.view === "trashed") {
     const key = decodeCursor(input.cursor, trashCursor);
 
-    if (!key) {
-      throw badCursor();
-    }
-
     return sql`(${table.trashedAt}, ${table.id}) < (${key.trashedAt}, ${key.id})`;
   }
 
   const key = decodeCursor(input.cursor, timelineCursor);
 
-  if (!key) {
-    throw badCursor();
-  }
-
   return sql`(${table.pinned}, ${table.createdAt}, ${table.id}) < (${key.pinned ? 1 : 0}, ${key.createdAt}, ${key.id})`;
 }
 
-function cursorOf(item: Note, view: ListInput["view"]): string {
+function cursorKey(item: Note, view: NoteState): CursorKey {
   return view === "trashed"
-    ? encodeCursor({ trashedAt: item.trashedAt ?? 0, id: item.id })
-    : encodeCursor({
-        pinned: item.pinned,
-        createdAt: item.createdAt,
-        id: item.id,
-      });
+    ? { trashedAt: item.trashedAt ?? 0, id: item.id }
+    : { pinned: item.pinned, createdAt: item.createdAt, id: item.id };
 }
 
-async function transition(
+/**
+ * Applies a lifecycle change to the Note at `version`. `change` returns the fields to
+ * write, or `null` when the Note's current state does not allow it.
+ */
+async function changeNote(
   db: Database,
   { id, version }: z.infer<typeof versioned>,
-  action: Transition
+  change: (
+    current: LifecycleFields,
+    now: Date
+  ) => Partial<LifecycleFields> | null,
+  refusal: (state: NoteState) => string
 ): Promise<Note> {
   const row = await readNote(db, id);
 
@@ -115,12 +100,12 @@ async function transition(
   }
 
   const now = new Date();
-  const next = applyTransition(row, action, now);
+  const next = change(row, now);
 
   if (!next) {
     throw new TRPCError({
       code: "PRECONDITION_FAILED",
-      message: `Cannot ${action} a note that is ${row.state}`,
+      message: refusal(row.state),
     });
   }
 
@@ -131,6 +116,18 @@ async function transition(
   }
 
   return await getNote(db, id);
+}
+
+function transition(action: Transition) {
+  return protectedProcedure.input(versioned).mutation(
+    async ({ ctx, input }) =>
+      await changeNote(
+        ctx.db,
+        input,
+        (current, now) => applyTransition(current, action, now),
+        (state) => `Cannot ${action} a note that is ${state}`
+      )
+  );
 }
 
 export const notesRouter = router({
@@ -154,14 +151,9 @@ export const notesRouter = router({
       with: { tags: { columns: { tag: true } } },
     });
 
-    const items = rows.slice(0, input.limit).map(toNote);
-    const last = items.at(-1);
-
-    return {
-      items,
-      nextCursor:
-        rows.length > input.limit && last ? cursorOf(last, input.view) : null,
-    };
+    return toPage(rows, input.limit, toNote, (item) =>
+      cursorKey(item, input.view)
+    );
   }),
 
   counts: protectedProcedure.query(async ({ ctx }) => {
@@ -185,7 +177,7 @@ export const notesRouter = router({
   }),
 
   get: protectedProcedure
-    .input(noteId)
+    .input(byId)
     .query(async ({ ctx, input }) => await getNote(ctx.db, input.id)),
 
   create: protectedProcedure.input(z.object({ content: noteContent })).mutation(
@@ -217,64 +209,23 @@ export const notesRouter = router({
 
   setPinned: protectedProcedure
     .input(versioned.extend({ pinned: z.boolean() }))
-    .mutation(async ({ ctx, input }) => {
-      const row = await readNote(ctx.db, input.id);
-
-      if (!row) {
-        throw noteNotFound();
-      }
-
-      if (row.version !== input.version) {
-        throw await lostWriteError(ctx.db, input.id);
-      }
-
-      if (!canSetPinned(row.state, input.pinned)) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "Only Timeline notes can be pinned",
-        });
-      }
-
-      const won = await writeNote(ctx.db, {
-        id: input.id,
-        expectedVersion: input.version,
-        now: new Date(),
-        patch: { pinned: input.pinned },
-      });
-
-      if (!won) {
-        throw await lostWriteError(ctx.db, input.id);
-      }
-
-      return await getNote(ctx.db, input.id);
-    }),
-
-  archive: protectedProcedure
-    .input(versioned)
     .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "archive")
+      async ({ ctx, input }) =>
+        await changeNote(
+          ctx.db,
+          input,
+          (current) => applyPinned(current, input.pinned),
+          () => "Only Timeline notes can be pinned"
+        )
     ),
 
-  unarchive: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "unarchive")
-    ),
-
-  trash: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "trash")
-    ),
-
-  restore: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "restore")
-    ),
+  archive: transition("archive"),
+  unarchive: transition("unarchive"),
+  trash: transition("trash"),
+  restore: transition("restore"),
 
   deletePermanently: protectedProcedure
-    .input(noteId)
+    .input(byId)
     .mutation(async ({ ctx, input }) => {
       // One statement, so a concurrent restore cannot slip between a state read and the delete.
       const result = await ctx.db

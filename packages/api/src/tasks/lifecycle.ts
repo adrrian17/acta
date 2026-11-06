@@ -4,9 +4,7 @@ export const TASK_STATES = task.state.enumValues;
 
 export type TaskState = (typeof TASK_STATES)[number];
 
-export const TRANSITIONS = ["markDone", "reopen", "trash", "restore"] as const;
-
-export type Transition = (typeof TRANSITIONS)[number];
+export type Transition = "markDone" | "reopen" | "trash" | "restore";
 
 export interface LifecycleFields {
   state: TaskState;
@@ -61,9 +59,4 @@ export function applyTransition(
       return null;
     }
   }
-}
-
-/** Done and Trashed Tasks are read-only; only an Open Task's title or Due date can change. */
-export function canEdit(state: TaskState): boolean {
-  return state === "open";
 }

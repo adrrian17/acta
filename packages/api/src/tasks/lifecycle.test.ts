@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { applyTransition, canEdit, TASK_STATES } from "./lifecycle";
+import { applyTransition } from "./lifecycle";
 import type { LifecycleFields, TaskState, Transition } from "./lifecycle";
 
 const DONE_AT = new Date("2026-10-20T12:00:00Z");
@@ -82,11 +82,5 @@ describe("applyTransition", () => {
     expect(applyTransition(TASKS.trashedFromOpen, "restore", NOW)).toEqual(
       TASKS.open
     );
-  });
-});
-
-describe("canEdit", () => {
-  it("allows editing only Open Tasks (AC 5)", () => {
-    expect(TASK_STATES.filter(canEdit)).toEqual(["open"]);
   });
 });

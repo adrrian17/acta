@@ -14,17 +14,13 @@ export interface AuthConfig {
   OWNER_GITHUB_ID: string;
 }
 
-export function createAuth(
-  env: AuthConfig,
-  database: Database,
-  desktopOrigins: readonly string[] = []
-) {
+export function createAuth(env: AuthConfig, database: Database) {
   return betterAuth({
     database: drizzleAdapter(database, {
       provider: "sqlite",
       schema: { account, session, user, verification },
     }),
-    trustedOrigins: [env.CORS_ORIGIN, ...desktopOrigins],
+    trustedOrigins: [env.CORS_ORIGIN],
     socialProviders: {
       github: {
         clientId: env.GITHUB_CLIENT_ID,
@@ -49,7 +45,6 @@ export function createAuth(
         httpOnly: true,
       },
     },
-    plugins: [],
   });
 }
 

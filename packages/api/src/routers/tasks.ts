@@ -5,35 +5,29 @@ import { and, asc, count, desc, eq, sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { z } from "zod";
 
-import { protectedProcedure, router } from "../index";
-import { decodeCursor, encodeCursor, trashCursor } from "../notes/cursor";
+import { byId, protectedProcedure, router, versioned } from "../index";
+import { decodeCursor, pageLimit, toPage } from "../paging";
+import type { CursorKey } from "../paging";
 import { doneCursor, openCursor } from "../tasks/cursor";
 import { applyTransition, TASK_STATES } from "../tasks/lifecycle";
 import type { TaskState, Transition } from "../tasks/lifecycle";
 import { toTask } from "../tasks/task";
 import type { Task } from "../tasks/task";
 import { taskDueDate, taskTitle } from "../tasks/title";
+import { trashCursor } from "../trash";
 
 export const TASK_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 100;
-
-const taskId = z.object({ id: z.string() });
-const versioned = z.object({ id: z.string(), version: z.int().positive() });
 
 const listInput = z.object({
   view: z.enum(TASK_STATES),
   cursor: z.string().optional(),
-  limit: z.int().min(1).max(MAX_PAGE_SIZE).default(TASK_PAGE_SIZE),
+  limit: pageLimit(TASK_PAGE_SIZE),
 });
 
 type View = z.infer<typeof listInput>["view"];
 
 function taskNotFound(): TRPCError {
   return new TRPCError({ code: "NOT_FOUND", message: "Task not found" });
-}
-
-function badCursor(): TRPCError {
-  return new TRPCError({ code: "BAD_REQUEST", message: "Invalid cursor" });
 }
 
 async function readTask(db: Database, id: string) {
@@ -70,10 +64,6 @@ function afterCursor(view: View, cursor: string | undefined): SQL | undefined {
   if (view === "open") {
     const key = decodeCursor(cursor, openCursor);
 
-    if (!key) {
-      throw badCursor();
-    }
-
     // Tasks without a Due date come after every dated Task.
     return key.dueDate === null
       ? sql`(${task.dueDate} IS NULL AND (${task.createdAt}, ${task.id}) > (${key.createdAt}, ${key.id}))`
@@ -83,18 +73,10 @@ function afterCursor(view: View, cursor: string | undefined): SQL | undefined {
   if (view === "done") {
     const key = decodeCursor(cursor, doneCursor);
 
-    if (!key) {
-      throw badCursor();
-    }
-
     return sql`(${task.doneAt}, ${task.id}) < (${key.doneAt}, ${key.id})`;
   }
 
   const key = decodeCursor(cursor, trashCursor);
-
-  if (!key) {
-    throw badCursor();
-  }
 
   return sql`(${task.trashedAt}, ${task.id}) < (${key.trashedAt}, ${key.id})`;
 }
@@ -110,21 +92,17 @@ const ORDER_BY = {
   trashed: [desc(task.trashedAt), desc(task.id)],
 } satisfies Record<View, SQL[]>;
 
-function cursorOf(item: Task, view: View): string {
+function cursorKey(item: Task, view: View): CursorKey {
   if (view === "open") {
-    return encodeCursor({
-      dueDate: item.dueDate,
-      createdAt: item.createdAt,
-      id: item.id,
-    });
+    return { dueDate: item.dueDate, createdAt: item.createdAt, id: item.id };
   }
 
   return view === "done"
-    ? encodeCursor({ doneAt: item.doneAt ?? 0, id: item.id })
-    : encodeCursor({ trashedAt: item.trashedAt ?? 0, id: item.id });
+    ? { doneAt: item.doneAt ?? 0, id: item.id }
+    : { trashedAt: item.trashedAt ?? 0, id: item.id };
 }
 
-async function transition(
+async function applyTaskTransition(
   db: Database,
   { id, version }: z.infer<typeof versioned>,
   action: Transition
@@ -162,6 +140,14 @@ async function transition(
   return toTask(updated);
 }
 
+function transition(action: Transition) {
+  return protectedProcedure
+    .input(versioned)
+    .mutation(
+      async ({ ctx, input }) => await applyTaskTransition(ctx.db, input, action)
+    );
+}
+
 export const tasksRouter = router({
   list: protectedProcedure.input(listInput).query(async ({ ctx, input }) => {
     const rows = await ctx.db
@@ -173,14 +159,9 @@ export const tasksRouter = router({
       .orderBy(...ORDER_BY[input.view])
       .limit(input.limit + 1);
 
-    const items = rows.slice(0, input.limit).map(toTask);
-    const last = items.at(-1);
-
-    return {
-      items,
-      nextCursor:
-        rows.length > input.limit && last ? cursorOf(last, input.view) : null,
-    };
+    return toPage(rows, input.limit, toTask, (item) =>
+      cursorKey(item, input.view)
+    );
   }),
 
   counts: protectedProcedure.query(async ({ ctx }) => {
@@ -203,7 +184,7 @@ export const tasksRouter = router({
     return counts;
   }),
 
-  get: protectedProcedure.input(taskId).query(async ({ ctx, input }) => {
+  get: protectedProcedure.input(byId).query(async ({ ctx, input }) => {
     const row = await readTask(ctx.db, input.id);
 
     if (!row) {
@@ -269,32 +250,13 @@ export const tasksRouter = router({
       return toTask(updated);
     }),
 
-  markDone: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "markDone")
-    ),
-
-  reopen: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "reopen")
-    ),
-
-  trash: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "trash")
-    ),
-
-  restore: protectedProcedure
-    .input(versioned)
-    .mutation(
-      async ({ ctx, input }) => await transition(ctx.db, input, "restore")
-    ),
+  markDone: transition("markDone"),
+  reopen: transition("reopen"),
+  trash: transition("trash"),
+  restore: transition("restore"),
 
   deletePermanently: protectedProcedure
-    .input(taskId)
+    .input(byId)
     .mutation(async ({ ctx, input }) => {
       // One statement, so a concurrent restore cannot slip between a state read and the delete.
       const result = await ctx.db

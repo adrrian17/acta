@@ -12,15 +12,9 @@ import {
   canRenameTag,
   deleteTag,
   extractTags,
-  isValidTag,
-  normalizeTag,
   renameTag,
+  tagInput,
 } from "../notes/tags";
-
-const tagInput = z
-  .string()
-  .transform(normalizeTag)
-  .refine(isValidTag, { error: "Invalid tag" });
 
 /**
  * Rewrites every Timeline and Archived Note tagged `tag` (or a descendant). A Note is

@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 /** A `#tag` token found in a Note's text. `start` is the `#`, `end` is exclusive. */
 interface TagToken {
   start: number;
@@ -122,6 +124,12 @@ function scanTags(text: string): TagToken[] {
 export function isValidTag(tag: string): boolean {
   return TAG.test(tag) && LETTER.test(tag) && normalizeTag(tag) === tag;
 }
+
+/** A Tag from the client: normalized, then checked. */
+export const tagInput = z
+  .string()
+  .transform(normalizeTag)
+  .refine(isValidTag, { error: "Invalid tag" });
 
 /** True when `tag` is `ancestor` or one of its descendants. */
 export function isTagOrDescendant(tag: string, ancestor: string): boolean {

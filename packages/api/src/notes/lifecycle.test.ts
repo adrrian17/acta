@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import {
-  applyTransition,
-  canSetPinned,
-  purgeAt,
-  TRASH_RETENTION_MS,
-} from "./lifecycle";
+import { applyPinned, applyTransition } from "./lifecycle";
 import type { LifecycleFields, NoteState, Transition } from "./lifecycle";
 
 const NOW = new Date("2026-10-27T12:00:00Z");
@@ -102,24 +97,14 @@ describe("applyTransition", () => {
   });
 });
 
-describe("canSetPinned", () => {
+describe("applyPinned", () => {
   it("pins only Timeline Notes", () => {
-    expect(canSetPinned("timeline", true)).toBe(true);
-    expect(canSetPinned("archived", true)).toBe(false);
-    expect(canSetPinned("trashed", true)).toBe(false);
+    expect(applyPinned(NOTES.timeline, true)).toEqual({ pinned: true });
+    expect(applyPinned(NOTES.archived, true)).toBeNull();
+    expect(applyPinned(NOTES.trashedFromTimeline, true)).toBeNull();
   });
 
   it("always allows unpinning", () => {
-    expect(canSetPinned("archived", false)).toBe(true);
-  });
-});
-
-describe("purgeAt", () => {
-  it("is 30 days after trashing", () => {
-    expect(purgeAt(NOW)?.getTime()).toBe(NOW.getTime() + TRASH_RETENTION_MS);
-  });
-
-  it("is null for a Note that is not Trashed", () => {
-    expect(purgeAt(null)).toBeNull();
+    expect(applyPinned(NOTES.archived, false)).toEqual({ pinned: false });
   });
 });

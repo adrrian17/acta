@@ -1,6 +1,6 @@
 import type { task } from "@acta/db/schema/tasks";
 
-import { purgeAt } from "../notes/lifecycle";
+import { purgeAt } from "../trash";
 import type { TaskState } from "./lifecycle";
 
 export interface Task {

@@ -1,6 +1,6 @@
 import type { note, noteTag } from "@acta/db/schema/notes";
 
-import { purgeAt } from "./lifecycle";
+import { purgeAt } from "../trash";
 import type { NoteState } from "./lifecycle";
 
 export interface Note {

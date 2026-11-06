@@ -7,7 +7,7 @@ export const openCursor = z.object({
   id: z.string(),
 });
 
-/** Sort key of the last row in the Done view. The Trash reuses `trashCursor` from notes. */
+/** Sort key of the last row in the Done view. */
 export const doneCursor = z.object({
   doneAt: z.int(),
   id: z.string(),
