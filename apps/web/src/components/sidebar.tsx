@@ -39,7 +39,7 @@ const NAV_ITEMS: readonly {
   to: LinkProps["to"];
   label: string;
   icon: LucideIcon;
-  /** The Note view whose count the entry shows; Tasks show none. */
+  /** The Note view whose count the entry shows; Trash and Tasks show none, like the Tasks Trash tab. */
   state?: NoteState;
 }[] = [
   { to: "/", label: NOTE_COPY.navTimeline, icon: Inbox, state: "timeline" },
@@ -49,7 +49,7 @@ const NAV_ITEMS: readonly {
     icon: Archive,
     state: "archived",
   },
-  { to: "/trash", label: NOTE_COPY.navTrash, icon: Trash2, state: "trashed" },
+  { to: "/trash", label: NOTE_COPY.navTrash, icon: Trash2 },
   { to: "/tasks", label: TASK_COPY.navTasks, icon: ListTodo },
 ];
 
