@@ -35,7 +35,7 @@ function TasksRoute() {
   return (
     <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
       {view === "open" && (
-        <div className="bg-card focus-within:border-ring/60 rounded-xl border p-3 transition-colors">
+        <div className="bg-card focus-within:border-ring/60 mb-3 rounded-xl border p-3 transition-colors">
           <TaskForm
             key={composerKey}
             label={TASK_COPY.composerPlaceholder}

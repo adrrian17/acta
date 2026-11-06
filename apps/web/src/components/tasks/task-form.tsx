@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from "@acta/ui/components/popover";
 import { Textarea } from "@acta/ui/components/textarea";
-import { ArrowUp, CalendarIcon, X } from "lucide-react";
+import { ArrowUp, CalendarIcon, Loader2, X } from "lucide-react";
 import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 
@@ -131,8 +131,18 @@ export function TaskForm({
               />
             }
           >
-            <CalendarIcon aria-hidden />
-            {dueDate === null ? TASK_COPY.dueDate : formatDay(dueDate)}
+            {dueDate === null ? (
+              // An unset date is a hint, so it stays as quiet as the placeholder.
+              <span className="text-muted-foreground flex items-center gap-1.5 font-normal">
+                <CalendarIcon aria-hidden />
+                {TASK_COPY.dueDate}
+              </span>
+            ) : (
+              <>
+                <CalendarIcon aria-hidden />
+                {formatDay(dueDate)}
+              </>
+            )}
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto">
             <Calendar
@@ -167,6 +177,9 @@ export function TaskForm({
               {TASK_COPY.cancel}
             </Button>
             <Button type="submit" size="sm" disabled={saving || error !== null}>
+              {saving && (
+                <Loader2 aria-hidden className="motion-safe:animate-spin" />
+              )}
               {TASK_COPY.save}
             </Button>
           </div>
@@ -179,7 +192,11 @@ export function TaskForm({
             className="ml-auto"
             disabled={saving || error !== null}
           >
-            <ArrowUp aria-hidden />
+            {saving ? (
+              <Loader2 aria-hidden className="motion-safe:animate-spin" />
+            ) : (
+              <ArrowUp aria-hidden />
+            )}
           </Button>
         )}
       </div>

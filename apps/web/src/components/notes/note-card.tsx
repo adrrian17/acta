@@ -1,5 +1,4 @@
 import type { Note } from "@acta/api/notes/note";
-import { deleteTag } from "@acta/api/notes/tags";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,6 +30,7 @@ import { NoteEditor } from "./note-editor";
 import { NotePreview } from "./note-preview";
 import { relativeTime } from "./relative-time";
 import { useNow } from "./use-now";
+import { withoutTags } from "./without-tags";
 
 const onSuccess = invalidateNotes;
 
@@ -51,18 +51,9 @@ function onError(error: { message: string; data?: { code?: string } | null }) {
   toast.error(error.message);
 }
 
-function withoutTags(note: Note): string {
-  let text = note.content;
-
-  for (const tag of note.tags) {
-    text = deleteTag(text, tag);
-  }
-
-  return text;
-}
-
 export function NoteCard({ note }: { note: Note }) {
   const [editing, setEditing] = useState(false);
+  const body = withoutTags(note.content, note.tags);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const now = useNow();
   const versioned = { id: note.id, version: note.version };
@@ -278,20 +269,25 @@ export function NoteCard({ note }: { note: Note }) {
             </DropdownMenu>
           </div>
           {/* Tags render as the chips below, so the card hides them from the text. */}
-          <NotePreview content={withoutTags(note)} />
+          {body !== "" && <NotePreview content={body} />}
           {note.purgeAt !== null && (
             <p className="text-muted-foreground text-xs">
-              {COPY.purgeAt(new Date(note.purgeAt).toLocaleDateString())}
+              {COPY.purgeAt(
+                new Date(note.purgeAt).toLocaleDateString(undefined, {
+                  dateStyle: "medium",
+                })
+              )}
             </p>
           )}
           {note.tags.length > 0 && (
-            <ul className="flex flex-wrap gap-1.5">
+            <ul className="flex flex-wrap gap-x-1.5 gap-y-2">
               {note.tags.map((tag) => (
-                <li key={tag}>
+                <li key={tag} className="max-w-full">
                   <Link
                     to="/"
                     search={{ tag }}
-                    className="bg-accent text-accent-foreground hover:bg-accent/70 relative rounded-full px-2 py-0.5 text-xs after:absolute after:inset-x-0 after:-inset-y-2.5"
+                    // The hit area grows only into the row gap, so wrapped chips never overlap.
+                    className="bg-accent text-accent-foreground hover:bg-accent/70 relative block max-w-full rounded-full px-2 py-0.5 text-xs [overflow-wrap:anywhere] after:absolute after:inset-x-0 after:-inset-y-1"
                   >
                     #{tag}
                   </Link>

@@ -241,13 +241,19 @@ export function TaskRow({ task }: { task: Task }) {
               )}
               {task.state === "done" && task.doneAt !== null && (
                 <span className="text-muted-foreground shrink-0 text-xs">
-                  {TASK_COPY.doneAt(new Date(task.doneAt).toLocaleDateString())}
+                  {TASK_COPY.doneAt(
+                    new Date(task.doneAt).toLocaleDateString(undefined, {
+                      dateStyle: "medium",
+                    })
+                  )}
                 </span>
               )}
               {task.purgeAt !== null && (
                 <span className="text-muted-foreground shrink-0 text-xs">
                   {TASK_COPY.purgeAt(
-                    new Date(task.purgeAt).toLocaleDateString()
+                    new Date(task.purgeAt).toLocaleDateString(undefined, {
+                      dateStyle: "medium",
+                    })
                   )}
                 </span>
               )}

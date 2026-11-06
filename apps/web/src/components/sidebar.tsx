@@ -55,7 +55,19 @@ const TASK_VIEWS = [
 
 function SidebarContent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [tasksOpen, setTasksOpen] = useState(pathname === "/tasks");
+  const onTasks = pathname === "/tasks";
+  const [tasksOpen, setTasksOpen] = useState(onTasks);
+  const [wasOnTasks, setWasOnTasks] = useState(onTasks);
+
+  // Arriving at /tasks any way (link, back, forward) opens the group so the active view shows.
+  if (onTasks !== wasOnTasks) {
+    setWasOnTasks(onTasks);
+
+    if (onTasks) {
+      setTasksOpen(true);
+    }
+  }
+
   const counts = useQuery(trpc.notes.counts.queryOptions());
   const taskCounts = useQuery(trpc.tasks.counts.queryOptions());
   const search = useSearch({ strict: false });
@@ -74,13 +86,6 @@ function SidebarContent() {
             <Link
               to={to}
               activeOptions={{ exact: true, includeSearch: false }}
-              onClick={
-                to === "/tasks"
-                  ? () => {
-                      setTasksOpen((open) => !open);
-                    }
-                  : undefined
-              }
               className={cn(
                 "group text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:text-accent-foreground relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
                 // An open Tasks group highlights the active view instead of its parent.

@@ -22,7 +22,9 @@ describe("localDay", () => {
 describe("formatDay", () => {
   it("keeps the calendar day", () => {
     expect(formatDay("2026-01-05")).toBe(
-      new Date(2026, 0, 5).toLocaleDateString()
+      new Date(2026, 0, 5).toLocaleDateString(undefined, {
+        dateStyle: "medium",
+      })
     );
   });
 });
