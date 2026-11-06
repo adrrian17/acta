@@ -158,6 +158,12 @@ describe("deleteTag", () => {
     expect(deleteTag("foo(#ideas)bar", "ideas")).toBe("foo()bar");
     expect(deleteTag("uno (#ideas y más)", "ideas")).toBe("uno (y más)");
     expect(deleteTag("uno [más #ideas]", "ideas")).toBe("uno [más]");
+    expect(deleteTag("[foo (#ideas)](https://x.com)", "ideas")).toBe(
+      "[foo](https://x.com)"
+    );
+    expect(deleteTag("[(#ideas) foo](https://x.com)", "ideas")).toBe(
+      "[foo](https://x.com)"
+    );
   });
 
   it("keeps link brackets", () => {

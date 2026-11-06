@@ -32,9 +32,9 @@ const PUNCTUATION = /[,.;:!?]/u;
 const OPENING_EDGE = /[\n([]/u;
 const CLOSING_EDGE = /[\n)\]]/u;
 
-// The character outside a bracket pair; empty at either end of the text.
-const BEFORE_STANDALONE = /^\s?$/u;
-const AFTER_STANDALONE = /^[\s,.;:!?]?$/u;
+// The character outside the parentheses; empty at either end of the text, or a link label edge.
+const BEFORE_STANDALONE = /^[\s[]?$/u;
+const AFTER_STANDALONE = /^[\s,.;:!?\]]?$/u;
 
 function mask(text: string, start: number, end: number): string {
   return text.slice(0, start) + MASK.repeat(end - start) + text.slice(end);
