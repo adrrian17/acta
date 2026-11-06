@@ -30,7 +30,10 @@ export const TASK_COPY = {
   conflictTitle: "This task changed on another device.",
   loadError: "Couldn't load your tasks.",
   retry: "Try again",
-  emptyOpen: "Nothing to do. Add a task above.",
-  emptyDone: "No finished tasks yet.",
-  emptyTrash: "Trash is empty. Tasks here are deleted after 30 days.",
+  emptyOpen: { title: "Nothing to do", text: "Add a task above." },
+  emptyDone: { title: "No finished tasks yet" },
+  emptyTrash: {
+    title: "Trash is empty",
+    text: "Tasks here are deleted after 30 days.",
+  },
 } as const;

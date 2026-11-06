@@ -30,6 +30,7 @@ import { NoteEditor } from "./note-editor";
 import { NotePreview } from "./note-preview";
 import { relativeTime } from "./relative-time";
 import { useNow } from "./use-now";
+import { withoutTags } from "./without-tags";
 
 const onSuccess = invalidateNotes;
 
@@ -52,6 +53,7 @@ function onError(error: { message: string; data?: { code?: string } | null }) {
 
 export function NoteCard({ note }: { note: Note }) {
   const [editing, setEditing] = useState(false);
+  const body = withoutTags(note.content, note.tags);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const now = useNow();
   const versioned = { id: note.id, version: note.version };
@@ -164,9 +166,9 @@ export function NoteCard({ note }: { note: Note }) {
   }
 
   return (
-    <Card>
+    <Card size="sm">
       <CardContent>
-        <div className="grid gap-3">
+        <div className="grid gap-2">
           <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <time
               dateTime={new Date(note.createdAt).toISOString()}
@@ -183,7 +185,8 @@ export function NoteCard({ note }: { note: Note }) {
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="ml-auto"
+                    // Negative margins keep the 32px target without padding the row.
+                    className="-my-1.5 -mr-2 ml-auto"
                     aria-label={COPY.noteActions}
                   />
                 }
@@ -265,20 +268,26 @@ export function NoteCard({ note }: { note: Note }) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <NotePreview content={note.content} />
+          {/* Tags render as the chips below, so the card hides them from the text. */}
+          {body !== "" && <NotePreview content={body} />}
           {note.purgeAt !== null && (
             <p className="text-muted-foreground text-xs">
-              {COPY.purgeAt(new Date(note.purgeAt).toLocaleDateString())}
+              {COPY.purgeAt(
+                new Date(note.purgeAt).toLocaleDateString(undefined, {
+                  dateStyle: "medium",
+                })
+              )}
             </p>
           )}
           {note.tags.length > 0 && (
-            <ul className="flex flex-wrap gap-1.5">
+            <ul className="flex flex-wrap gap-x-1.5 gap-y-2">
               {note.tags.map((tag) => (
-                <li key={tag}>
+                <li key={tag} className="max-w-full">
                   <Link
                     to="/"
                     search={{ tag }}
-                    className="bg-accent text-accent-foreground hover:bg-accent/70 rounded-full px-2 py-0.5 text-xs"
+                    // The hit area grows only into the row gap, so wrapped chips never overlap.
+                    className="bg-accent text-accent-foreground hover:bg-accent/70 relative block max-w-full rounded-full px-2 py-0.5 text-xs [overflow-wrap:anywhere] after:absolute after:inset-x-0 after:-inset-y-1"
                   >
                     #{tag}
                   </Link>

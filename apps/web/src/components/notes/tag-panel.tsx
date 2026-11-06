@@ -176,8 +176,8 @@ function FilterRow({
     <div
       className={cn(
         // A border, not a ring: the scrolling sidebar clips anything drawn outside the box.
-        "group hover:bg-muted flex items-center gap-1 rounded-md border border-transparent pr-1 transition-colors",
-        isActive && "bg-accent hover:bg-accent border-primary/60"
+        "group hover:bg-accent/50 flex items-center gap-1 rounded-lg border border-transparent pr-1 transition-colors",
+        isActive && "bg-accent hover:bg-accent"
       )}
       data-active={isActive}
     >
@@ -187,12 +187,12 @@ function FilterRow({
         search={isActive ? {} : filter}
         aria-current={isActive ? "true" : undefined}
         className={cn(
-          "text-muted-foreground group-hover:text-foreground flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+          "text-muted-foreground group-hover:text-foreground flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-1.5 text-sm",
           isActive &&
             "text-accent-foreground group-hover:text-accent-foreground font-medium"
         )}
       >
-        <Hash aria-hidden className="size-4 shrink-0" strokeWidth={1.5} />
+        <Hash aria-hidden className="size-5 shrink-0" strokeWidth={1.75} />
         <span className="flex-1 truncate">{label}</span>
       </Link>
       {actions}

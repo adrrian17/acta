@@ -159,7 +159,7 @@ export function TaskRow({ task }: { task: Task }) {
 
   if (editing) {
     return (
-      <div className="bg-card rounded-xl border p-3">
+      <div className="bg-card focus-within:border-ring/60 rounded-xl border p-3 transition-colors">
         <TaskForm
           label={TASK_COPY.edit}
           initial={{ title: task.title, dueDate: task.dueDate }}
@@ -212,9 +212,9 @@ export function TaskRow({ task }: { task: Task }) {
               <Checkbox
                 checked={task.state === "done"}
                 disabled={busy}
-                aria-label={
+                aria-label={`${
                   task.state === "done" ? TASK_COPY.reopen : TASK_COPY.markDone
-                }
+                }: ${task.title}`}
                 onCheckedChange={(checked) => {
                   if (checked) {
                     markDone.mutate(versioned);
@@ -225,28 +225,39 @@ export function TaskRow({ task }: { task: Task }) {
               />
             </div>
           )}
-          <p
-            className={cn(
-              "min-w-0 flex-1 py-1.5 text-sm break-words",
-              task.state === "done" && "text-muted-foreground line-through"
-            )}
-          >
-            {task.title}
-          </p>
-          <div className="flex h-8 shrink-0 items-center">
-            {task.state === "open" && task.dueDate !== null && (
-              <DueLabel dueDate={task.dueDate} />
-            )}
-            {task.state === "done" && task.doneAt !== null && (
-              <span className="text-muted-foreground shrink-0 text-xs">
-                {TASK_COPY.doneAt(new Date(task.doneAt).toLocaleDateString())}
-              </span>
-            )}
-            {task.purgeAt !== null && (
-              <span className="text-muted-foreground shrink-0 text-xs">
-                {TASK_COPY.purgeAt(new Date(task.purgeAt).toLocaleDateString())}
-              </span>
-            )}
+          {/* Below sm the date wraps under the title so long titles keep their width. */}
+          <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-3">
+            <p
+              className={cn(
+                "min-w-0 flex-1 py-1.5 text-sm break-words",
+                task.state === "done" && "text-muted-foreground line-through"
+              )}
+            >
+              {task.title}
+            </p>
+            <div className="flex shrink-0 items-center empty:hidden max-sm:pb-1.5 sm:h-8">
+              {task.state === "open" && task.dueDate !== null && (
+                <DueLabel dueDate={task.dueDate} />
+              )}
+              {task.state === "done" && task.doneAt !== null && (
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {TASK_COPY.doneAt(
+                    new Date(task.doneAt).toLocaleDateString(undefined, {
+                      dateStyle: "medium",
+                    })
+                  )}
+                </span>
+              )}
+              {task.purgeAt !== null && (
+                <span className="text-muted-foreground shrink-0 text-xs">
+                  {TASK_COPY.purgeAt(
+                    new Date(task.purgeAt).toLocaleDateString(undefined, {
+                      dateStyle: "medium",
+                    })
+                  )}
+                </span>
+              )}
+            </div>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger

@@ -8,6 +8,7 @@ import {
   EmptyTitle,
 } from "@acta/ui/components/empty";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Archive, Inbox, Trash2 } from "lucide-react";
 
 import Loader from "@/components/loader";
@@ -20,12 +21,12 @@ const EMPTY_ICONS = { timeline: Inbox, archived: Archive, trashed: Trash2 };
 
 interface NoteListProps {
   view: Note["state"];
-  emptyText: string;
+  empty: { title: string; text?: string };
   tag?: string;
   untagged?: true;
 }
 
-export function NoteList({ view, emptyText, tag, untagged }: NoteListProps) {
+export function NoteList({ view, empty, tag, untagged }: NoteListProps) {
   const query = useInfiniteQuery(
     trpc.notes.list.infiniteQueryOptions(
       { view, tag, untagged },
@@ -35,6 +36,24 @@ export function NoteList({ view, emptyText, tag, untagged }: NoteListProps) {
 
   if (query.isPending) {
     return <Loader />;
+  }
+
+  if (query.isError && query.data === undefined) {
+    return (
+      <Empty className="my-12">
+        <EmptyHeader>
+          <EmptyTitle>{COPY.loadError}</EmptyTitle>
+        </EmptyHeader>
+        <Button
+          variant="outline"
+          onClick={() => {
+            void query.refetch();
+          }}
+        >
+          {COPY.retry}
+        </Button>
+      </Empty>
+    );
   }
 
   const notes = query.data?.pages.flatMap((page) => page.items) ?? [];
@@ -48,9 +67,20 @@ export function NoteList({ view, emptyText, tag, untagged }: NoteListProps) {
           <EmptyMedia variant="accent">
             <EmptyIcon aria-hidden className="size-5" />
           </EmptyMedia>
-          <EmptyTitle>{COPY.emptyTitle}</EmptyTitle>
-          <EmptyDescription>{emptyText}</EmptyDescription>
+          <EmptyTitle>{empty.title}</EmptyTitle>
+          {empty.text !== undefined && (
+            <EmptyDescription>{empty.text}</EmptyDescription>
+          )}
         </EmptyHeader>
+        {(tag !== undefined || untagged === true) && (
+          <Button
+            variant="outline"
+            nativeButton={false}
+            render={<Link to="/" />}
+          >
+            {COPY.clearFilter}
+          </Button>
+        )}
       </Empty>
     );
   }

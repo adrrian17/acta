@@ -1,7 +1,7 @@
 import { Button } from "@acta/ui/components/button";
 import { Label } from "@acta/ui/components/label";
 import { Textarea } from "@acta/ui/components/textarea";
-import { Eye, Hash, List, Save } from "lucide-react";
+import { ArrowUp, Eye, Hash, List, Loader2 } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import { COPY } from "./copy";
@@ -148,6 +148,7 @@ export function NoteEditor({
             variant="ghost"
             size="icon-sm"
             aria-label={COPY.insertTag}
+            title={COPY.insertTag}
             disabled={previewing}
             onClick={() => {
               insert("#", false);
@@ -160,6 +161,7 @@ export function NoteEditor({
             variant="ghost"
             size="icon-sm"
             aria-label={COPY.insertList}
+            title={COPY.insertList}
             disabled={previewing}
             onClick={() => {
               insert("- ", true);
@@ -173,6 +175,7 @@ export function NoteEditor({
             variant="ghost"
             size="icon-sm"
             aria-label={COPY.preview}
+            title={COPY.preview}
             aria-pressed={previewing}
             onClick={() => {
               setPreviewing((shown) => !shown);
@@ -189,7 +192,11 @@ export function NoteEditor({
             title={COPY.send}
             disabled={saving || error !== null}
           >
-            <Save aria-hidden />
+            {saving ? (
+              <Loader2 aria-hidden className="motion-safe:animate-spin" />
+            ) : (
+              <ArrowUp aria-hidden />
+            )}
           </Button>
         ) : (
           <div className="flex gap-2">
@@ -197,6 +204,9 @@ export function NoteEditor({
               {COPY.cancel}
             </Button>
             <Button type="submit" size="sm" disabled={saving || error !== null}>
+              {saving && (
+                <Loader2 aria-hidden className="motion-safe:animate-spin" />
+              )}
               {COPY.save}
             </Button>
           </div>

@@ -46,8 +46,17 @@ export const COPY = {
     `Remove #${tag} from ${count} notes? The rest of each note stays.`,
   tagsResult: (changed: number, skipped: number) =>
     `Updated ${changed} notes. ${skipped} skipped because they would end up empty or too long.`,
-  emptyTitle: "Nothing here yet",
-  emptyTimeline: "No notes yet. Write your first one above.",
-  emptyArchive: "No archived notes.",
-  emptyTrash: "Trash is empty. Notes here are deleted after 30 days.",
+  loadError: "Couldn't load your notes.",
+  retry: "Try again",
+  emptyTimeline: { title: "No notes yet", text: "Write your first one above." },
+  emptyFiltered: {
+    title: "No matching notes",
+    text: "Choose another tag or clear the filter.",
+  },
+  clearFilter: "Clear filter",
+  emptyArchive: { title: "No archived notes" },
+  emptyTrash: {
+    title: "Trash is empty",
+    text: "Notes here are deleted after 30 days.",
+  },
 } as const;

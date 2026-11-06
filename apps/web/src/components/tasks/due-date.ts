@@ -11,7 +11,9 @@ export function localDay(now: number): string {
 export function formatDay(day: string): string {
   const [year = 0, month = 1, date = 1] = day.split("-").map(Number);
 
-  return new Date(year, month - 1, date).toLocaleDateString();
+  return new Date(year, month - 1, date).toLocaleDateString(undefined, {
+    dateStyle: "medium",
+  });
 }
 
 /** How an Open Task's Due date compares with `today`; YYYY-MM-DD text compares like the dates it holds. */

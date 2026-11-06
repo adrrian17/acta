@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_auth/trash")({
 function TrashRoute() {
   return (
     <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
-      <NoteList view="trashed" emptyText={COPY.emptyTrash} />
+      <NoteList view="trashed" empty={COPY.emptyTrash} />
     </main>
   );
 }

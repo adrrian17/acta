@@ -55,7 +55,19 @@ const TASK_VIEWS = [
 
 function SidebarContent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [tasksOpen, setTasksOpen] = useState(pathname === "/tasks");
+  const onTasks = pathname === "/tasks";
+  const [tasksOpen, setTasksOpen] = useState(onTasks);
+  const [wasOnTasks, setWasOnTasks] = useState(onTasks);
+
+  // Arriving at /tasks any way (link, back, forward) opens the group so the active view shows.
+  if (onTasks !== wasOnTasks) {
+    setWasOnTasks(onTasks);
+
+    if (onTasks) {
+      setTasksOpen(true);
+    }
+  }
+
   const counts = useQuery(trpc.notes.counts.queryOptions());
   const taskCounts = useQuery(trpc.tasks.counts.queryOptions());
   const search = useSearch({ strict: false });
@@ -74,14 +86,12 @@ function SidebarContent() {
             <Link
               to={to}
               activeOptions={{ exact: true, includeSearch: false }}
-              onClick={
-                to === "/tasks"
-                  ? () => {
-                      setTasksOpen((open) => !open);
-                    }
-                  : undefined
-              }
-              className="group text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:bg-accent data-[status=active]:text-accent-foreground data-[status=active]:border-primary/60 relative flex items-center gap-3 rounded-lg border border-transparent px-3 py-2 text-sm"
+              className={cn(
+                "group text-muted-foreground hover:bg-accent/50 hover:text-foreground data-[status=active]:text-accent-foreground relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm",
+                // An open Tasks group highlights the active view instead of its parent.
+                !(to === "/tasks" && tasksOpen) &&
+                  "data-[status=active]:bg-accent"
+              )}
             >
               <Icon aria-hidden className="size-5" strokeWidth={1.75} />
               <span className="flex-1">{label}</span>
@@ -203,12 +213,11 @@ export function TopBar() {
           <SidebarContent />
         </SheetContent>
       </Sheet>
-      <span aria-hidden className="text-muted-foreground max-lg:hidden">
-        /
-      </span>
-      <h1 className="text-sm font-semibold">
+      <h1 className="min-w-0 truncate text-sm font-semibold">
         {title}
         {taskView && ` • ${taskView.label}`}
+        {pathname === "/" && search.tag !== undefined && ` • #${search.tag}`}
+        {pathname === "/" && search.untagged === true && ` • ${COPY.untagged}`}
       </h1>
     </header>
   );

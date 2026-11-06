@@ -173,9 +173,9 @@ All procedures use `protectedProcedure` and validate their input with Zod.
 | `error.task.tooLong` | A task can be at most 500 characters. |
 | `error.task.badDate` | That date isn't valid. |
 | `conflict.task.title` | This task changed on another device. |
-| `empty.tasks.open` | Nothing to do. Add a task above. |
-| `empty.tasks.done` | No finished tasks yet. |
-| `empty.tasks.trash` | Trash is empty. Tasks here are deleted after 30 days. |
+| `empty.tasks.open` | Nothing to do / Add a task above. |
+| `empty.tasks.done` | No finished tasks yet |
+| `empty.tasks.trash` | Trash is empty / Tasks here are deleted after 30 days. |
 
 ## Code Style
 

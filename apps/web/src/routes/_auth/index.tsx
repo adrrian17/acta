@@ -34,7 +34,7 @@ function TimelineRoute() {
 
   return (
     <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
-      <div className="bg-card focus-within:border-ring/60 rounded-xl border transition-colors">
+      <div className="bg-card focus-within:border-ring/60 mb-3 rounded-xl border transition-colors">
         <NoteEditor
           key={composerKey}
           label={COPY.composerLabel}
@@ -46,7 +46,11 @@ function TimelineRoute() {
       </div>
       <NoteList
         view="timeline"
-        emptyText={COPY.emptyTimeline}
+        empty={
+          filter.tag === undefined && filter.untagged !== true
+            ? COPY.emptyTimeline
+            : COPY.emptyFiltered
+        }
         tag={filter.tag}
         untagged={filter.untagged}
       />

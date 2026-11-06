@@ -18,9 +18,9 @@ import { TASK_COPY } from "./copy";
 import { TaskRow } from "./task-row";
 
 const EMPTY = {
-  open: { icon: ListTodo, text: TASK_COPY.emptyOpen },
-  done: { icon: CircleCheck, text: TASK_COPY.emptyDone },
-  trashed: { icon: Trash2, text: TASK_COPY.emptyTrash },
+  open: { icon: ListTodo, copy: TASK_COPY.emptyOpen },
+  done: { icon: CircleCheck, copy: TASK_COPY.emptyDone },
+  trashed: { icon: Trash2, copy: TASK_COPY.emptyTrash },
 };
 
 export function TaskList({ view }: { view: Task["state"] }) {
@@ -56,7 +56,7 @@ export function TaskList({ view }: { view: Task["state"] }) {
   const tasks = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   if (tasks.length === 0) {
-    const { icon: EmptyIcon, text } = EMPTY[view];
+    const { icon: EmptyIcon, copy } = EMPTY[view];
 
     return (
       <Empty className="my-12">
@@ -64,8 +64,8 @@ export function TaskList({ view }: { view: Task["state"] }) {
           <EmptyMedia variant="accent">
             <EmptyIcon aria-hidden className="size-5" />
           </EmptyMedia>
-          <EmptyTitle>{COPY.emptyTitle}</EmptyTitle>
-          <EmptyDescription>{text}</EmptyDescription>
+          <EmptyTitle>{copy.title}</EmptyTitle>
+          {"text" in copy && <EmptyDescription>{copy.text}</EmptyDescription>}
         </EmptyHeader>
       </Empty>
     );

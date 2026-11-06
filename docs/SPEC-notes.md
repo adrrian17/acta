@@ -237,10 +237,11 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `conflict.title` | This note changed on another device. |
 | `conflict.reload` | Reload |
 | `conflict.overwrite` | Overwrite |
-| `empty.title` | Nothing here yet |
-| `empty.timeline` | No notes yet. Write your first one above. |
-| `empty.archive` | No archived notes. |
-| `empty.trash` | Trash is empty. Notes here are deleted after 30 days. |
+| `empty.timeline` | No notes yet / Write your first one above. |
+| `empty.filtered` | No matching notes / Choose another tag or clear the filter. |
+| `empty.clearFilter` | Clear filter |
+| `empty.archive` | No archived notes |
+| `empty.trash` | Trash is empty / Notes here are deleted after 30 days. |
 
 ## Code Style
 
@@ -303,7 +304,7 @@ export const noteContent = z
 
 - The page size is 30 and the maximum `limit` is 100.
 - Tags are filtered only in the Timeline. The Archive and Trash views have no filters.
-- A Note with no Tags shows no Tag chips. Tags appear in the card exactly as typed, inside the rendered text, with no separate chip list.
+- A Note with no Tags shows no Tag chips. In the card, Tags appear only as the chip footer: the rendered text hides the `#tag` tokens, while the stored content and the editor keep them as typed.
 - `owner-access` already generated the migration for the Better Auth tables, so `notes` adds its own migration.
 - `privateData`, `/dashboard` and the scaffold landing at `/` are removed.
 

@@ -26,6 +26,7 @@ const TAG_TOKEN =
 const TAG = /^[\p{L}\p{M}\p{N}_-]+(?:\/[\p{L}\p{M}\p{N}_-]+)*$/u;
 const LETTER = /\p{L}/u;
 const HORIZONTAL_SPACE = /[ \t]/u;
+const PUNCTUATION = /[,.;:!?]/u;
 
 function mask(text: string, start: number, end: number): string {
   return text.slice(0, start) + MASK.repeat(end - start) + text.slice(end);
@@ -180,7 +181,8 @@ function removalRange(text: string, token: TagToken): [number, number] {
     return [token.start, after];
   }
 
-  if (atLineEnd) {
+  // "uno #ideas, dos" -> "uno, dos": punctuation closes up to the word before.
+  if (atLineEnd || PUNCTUATION.test(text.charAt(token.end))) {
     return [before, token.end];
   }
 

@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_auth/archive")({
 function ArchiveRoute() {
   return (
     <main className="grid content-start gap-3 px-3 pb-6 lg:px-4">
-      <NoteList view="archived" emptyText={COPY.emptyArchive} />
+      <NoteList view="archived" empty={COPY.emptyArchive} />
     </main>
   );
 }
