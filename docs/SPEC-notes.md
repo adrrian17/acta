@@ -237,10 +237,11 @@ All procedures use `protectedProcedure` (Owner-gated) and validate their input w
 | `conflict.title` | This note changed on another device. |
 | `conflict.reload` | Reload |
 | `conflict.overwrite` | Overwrite |
-| `empty.title` | Nothing here yet |
-| `empty.timeline` | No notes yet. Write your first one above. |
-| `empty.archive` | No archived notes. |
-| `empty.trash` | Trash is empty. Notes here are deleted after 30 days. |
+| `empty.timeline` | No notes yet / Write your first one above. |
+| `empty.filtered` | No matching notes / Choose another tag or clear the filter. |
+| `empty.clearFilter` | Clear filter |
+| `empty.archive` | No archived notes |
+| `empty.trash` | Trash is empty / Notes here are deleted after 30 days. |
 
 ## Code Style
 
