@@ -32,6 +32,10 @@ const PUNCTUATION = /[,.;:!?]/u;
 const OPENING_EDGE = /[\n([]/u;
 const CLOSING_EDGE = /[\n)\]]/u;
 
+// The character outside a bracket pair; empty at either end of the text.
+const BEFORE_STANDALONE = /^\s?$/u;
+const AFTER_STANDALONE = /^[\s,.;:!?]?$/u;
+
 function mask(text: string, start: number, end: number): string {
   return text.slice(0, start) + MASK.repeat(end - start) + text.slice(end);
 }
@@ -170,10 +174,17 @@ function spaceRunEnd(text: string, index: number): number {
   return end;
 }
 
-/** The token, or the parentheses around it when it is all they hold: "(#ideas)". */
+/** The token, or the parentheses around it when they stand alone holding only it: " (#ideas) ". */
 function removedUnit(text: string, token: TagToken): TagToken {
   // Brackets stay: they can be a link label, and a destination is never scanned.
-  return text.charAt(token.start - 1) === "(" && text.charAt(token.end) === ")"
+  const wrapped =
+    text.charAt(token.start - 1) === "(" && text.charAt(token.end) === ")";
+
+  const standalone =
+    BEFORE_STANDALONE.test(text.charAt(token.start - 2)) &&
+    AFTER_STANDALONE.test(text.charAt(token.end + 1));
+
+  return wrapped && standalone
     ? { ...token, start: token.start - 1, end: token.end + 1 }
     : token;
 }

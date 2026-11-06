@@ -56,12 +56,20 @@ function hideInInlines(
         return children.length > 0 ? [{ ...node, children }] : [];
       }
 
+      case "image": {
+        return [
+          {
+            ...node,
+            alt: hideInText(node.alt, tags, { before: false, after: false }),
+          },
+        ];
+      }
+
       // A link keeps its text so it stays visible and clickable.
       case "link":
       case "inlineCode":
       case "inlineHtml":
       case "inlineComponent":
-      case "image":
       case "break":
       case "footnoteReference": {
         return [node];
@@ -123,15 +131,17 @@ function hideInBlock(block: BlockNode, tags: readonly string[]): BlockNode[] {
     }
 
     case "table": {
-      return [
-        {
-          ...block,
-          header: block.header.map((cell) => hideInCell(cell, tags)),
-          rows: block.rows.map((row) =>
-            row.map((cell) => hideInCell(cell, tags))
-          ),
-        },
-      ];
+      const header = block.header.map((cell) => hideInCell(cell, tags));
+
+      const rows = block.rows.map((row) =>
+        row.map((cell) => hideInCell(cell, tags))
+      );
+
+      const emptied = [header, ...rows].every((row) =>
+        row.every((cell) => cell.children.length === 0)
+      );
+
+      return emptied ? [] : [{ ...block, header, rows }];
     }
 
     case "footnotes": {

@@ -155,6 +155,7 @@ describe("deleteTag", () => {
 
   it("removes the parentheses around a lone Tag", () => {
     expect(deleteTag("uno (#ideas) dos", "ideas")).toBe("uno dos");
+    expect(deleteTag("foo(#ideas)bar", "ideas")).toBe("foo()bar");
     expect(deleteTag("uno (#ideas y más)", "ideas")).toBe("uno (y más)");
     expect(deleteTag("uno [más #ideas]", "ideas")).toBe("uno [más]");
   });

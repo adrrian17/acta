@@ -90,4 +90,11 @@ describe("withoutTags", () => {
       "<p><strong>a<br/>b</strong></p>"
     );
   });
+
+  it("hides tags in image text and drops tables that held only tags", () => {
+    expect(cardBody("![#ideas](https://example.com/x.png)")).toContain(
+      'alt=""'
+    );
+    expect(cardBody("| #ideas |\n| --- |\n| #work |")).toBe("");
+  });
 });
