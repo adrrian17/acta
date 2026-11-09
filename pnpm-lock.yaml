@@ -498,6 +498,9 @@ importers:
       '@acta/config':
         specifier: workspace:*
         version: link:../config
+      emulate:
+        specifier: 0.13.0
+        version: 0.13.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -4498,6 +4501,10 @@ packages:
   empathic@2.1.0:
     resolution: {integrity: sha512-AnfC1ATldl49/cvZdLPDjBfrRNwbDO05aibiOtzQu3qtlbJtomNLhF30HEtn/7iBz50dlMECqATo3fG0LrdEgw==}
     engines: {node: '>=14'}
+
+  emulate@0.13.0:
+    resolution: {integrity: sha512-vtqs1LkINxUs50ypLL9C2+9PUxaddIfsXVM573XqA1IWODXFpxczcueMTHGRN0Lb5RTIcxcIEPUDFaBRk50F8Q==}
+    hasBin: true
 
   encodeurl@2.0.0:
     resolution: {integrity: sha512-Q0n9HRi4m6JuGIV1eFlmvJB7ZEVxu93IrMyiMsGC0lrMJMWzRgx6WGquyfQgZVb31vhGgXnfmPNNXmxnOkRBrg==}
@@ -10489,6 +10496,12 @@ snapshots:
   emoji-regex@9.2.2: {}
 
   empathic@2.1.0: {}
+
+  emulate@0.13.0:
+    dependencies:
+      commander: 14.0.3
+      picocolors: 1.1.1
+      yaml: 2.9.1
 
   encodeurl@2.0.0: {}
 

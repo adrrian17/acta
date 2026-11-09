@@ -13,6 +13,8 @@ interface AuthConfig {
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
   OWNER_GITHUB_ID: string;
+  /** Set only under `alchemy dev`; sends GitHub sign-in to the local emulator. */
+  GITHUB_EMULATOR_URL?: string;
 }
 
 export function createAuth(env: AuthConfig, database: Database) {
@@ -26,6 +28,10 @@ export function createAuth(env: AuthConfig, database: Database) {
       github: {
         clientId: env.GITHUB_CLIENT_ID,
         clientSecret: env.GITHUB_CLIENT_SECRET,
+        authorizationEndpoint:
+          env.GITHUB_EMULATOR_URL === undefined
+            ? undefined
+            : `${env.GITHUB_EMULATOR_URL}/login/oauth/authorize`,
         mapProfileToUser: async (profile) => {
           await assertOwnerProfile(
             profile,

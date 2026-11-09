@@ -1,5 +1,6 @@
 import { purgeTrashed, TRASHABLE } from "@acta/api/purge";
 import { appRouter } from "@acta/api/routers/index";
+import { githubEmulatorFetch } from "@acta/auth/github-emulator";
 import { trpcServer } from "@hono/trpc-server";
 import { initLogger } from "evlog";
 import { createAuthMiddleware } from "evlog/better-auth";
@@ -11,6 +12,13 @@ import { cors } from "hono/cors";
 import { createContext } from "./context";
 import { ENV } from "./env.server";
 import { createAuth, getDb } from "./services";
+
+if (ENV.GITHUB_EMULATOR_URL !== undefined) {
+  globalThis.fetch = githubEmulatorFetch(
+    ENV.GITHUB_EMULATOR_URL,
+    globalThis.fetch
+  );
+}
 
 initLogger({
   env: { service: "acta-server" },
