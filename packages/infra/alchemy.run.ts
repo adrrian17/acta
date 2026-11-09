@@ -1,6 +1,7 @@
 import { D1, providers, state, Website, Worker } from "@alchemy.run/cloudflare";
 import type { InferEnv } from "@alchemy.run/cloudflare";
 import { Stack } from "alchemy";
+import { AlchemyContext } from "alchemy/AlchemyContext";
 import { Config, Effect } from "effect";
 import "varlock/auto-load";
 
@@ -15,6 +16,26 @@ export const server = Worker(
   Effect.gen(function* serverProps() {
     const name = yield* serverName;
     const domain = yield* customDomain("server");
+    const { dev } = yield* AlchemyContext;
+
+    const deployedEnv = {
+      DB: db,
+      CORS_ORIGIN: webOrigin,
+      BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
+      BETTER_AUTH_URL: Worker.URL,
+      GITHUB_CLIENT_ID: Config.String("GITHUB_CLIENT_ID"),
+      GITHUB_CLIENT_SECRET: Config.Redacted("GITHUB_CLIENT_SECRET"),
+      OWNER_GITHUB_ID: Config.String("OWNER_GITHUB_ID"),
+    };
+
+    const env: typeof deployedEnv & { GITHUB_EMULATOR_URL?: string } = {
+      ...deployedEnv,
+    };
+
+    // Only `alchemy dev` reaches the GitHub emulator that `pnpm dev` starts in packages/auth.
+    if (dev) {
+      env.GITHUB_EMULATOR_URL = "http://localhost:4000";
+    }
 
     return {
       name,
@@ -27,15 +48,7 @@ export const server = Worker(
       },
       // Daily purge of trashed Notes and Tasks; handled by `scheduled` in apps/server.
       crons: ["0 3 * * *"],
-      env: {
-        DB: db,
-        CORS_ORIGIN: webOrigin,
-        BETTER_AUTH_SECRET: Config.Redacted("BETTER_AUTH_SECRET"),
-        BETTER_AUTH_URL: Worker.URL,
-        GITHUB_CLIENT_ID: Config.String("GITHUB_CLIENT_ID"),
-        GITHUB_CLIENT_SECRET: Config.Redacted("GITHUB_CLIENT_SECRET"),
-        OWNER_GITHUB_ID: Config.String("OWNER_GITHUB_ID"),
-      },
+      env,
       dev: {
         port: 3000,
       },

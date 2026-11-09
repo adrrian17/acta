@@ -1,3 +1,4 @@
+import { AlchemyContext } from "alchemy/AlchemyContext";
 import { Stage } from "alchemy/Stage";
 import { Effect } from "effect";
 import { expect, test, vi } from "vite-plus/test";
@@ -7,7 +8,8 @@ const boundary = vi.hoisted(() => {
 
   return {
     bodies,
-    worker: vi.fn<(id: string, props: { name?: unknown }) => void>(),
+    worker:
+      vi.fn<(id: string, props: { name?: unknown; env?: object }) => void>(),
     website: vi.fn<(id: string, props: { name?: unknown }) => void>(),
   };
 });
@@ -57,6 +59,29 @@ vi.mock("@alchemy.run/cloudflare", () => ({
 
 await import("./alchemy.run");
 
+const runStack = async (stage: string, dev: boolean) => {
+  boundary.website.mockClear();
+  boundary.worker.mockClear();
+  const [body] = boundary.bodies;
+
+  if (!body) {
+    throw new Error("The infrastructure stack was not registered");
+  }
+
+  await Effect.runPromise(
+    body.pipe(
+      Effect.provideService(Stage, stage),
+      Effect.provideService(AlchemyContext, {
+        dotAlchemy: ".alchemy",
+        dev,
+        adopt: false,
+      })
+    )
+  );
+};
+
+const serverEnv = () => boundary.worker.mock.calls[0]?.[1].env;
+
 test.each([
   ["preview", "preview"],
   ["prod", "prod"],
@@ -65,16 +90,7 @@ test.each([
 ])(
   "the stack passes resolved Worker names for %s",
   async (stage, nameStage) => {
-    boundary.website.mockClear();
-    boundary.worker.mockClear();
-    const [body] = boundary.bodies;
-    expect(body).toBeDefined();
-
-    if (!body) {
-      throw new Error("The infrastructure stack was not registered");
-    }
-
-    await Effect.runPromise(body.pipe(Effect.provideService(Stage, stage)));
+    await runStack(stage, false);
 
     const isProd = stage === "prod";
 
@@ -96,3 +112,18 @@ test.each([
     );
   }
 );
+
+test("deployed stages never route GitHub sign-in to the emulator", async () => {
+  await runStack("prod", false);
+
+  expect(serverEnv()).not.toHaveProperty("GITHUB_EMULATOR_URL");
+});
+
+test("alchemy dev routes GitHub sign-in to the local emulator", async () => {
+  await runStack("local", true);
+
+  expect(serverEnv()).toHaveProperty(
+    "GITHUB_EMULATOR_URL",
+    "http://localhost:4000"
+  );
+});
